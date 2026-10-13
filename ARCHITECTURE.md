@@ -1,101 +1,145 @@
-# NETSPECTRE System Architecture & Engineering Report
+# NETSPECTRE V3.0 — System Architecture & Engineering Report
+**Enterprise Network Telemetry & Diagnostics Platform**
+
+---
 
 ## 1. Architectural Overview
 
-NETSPECTRE is built as a modular, high-performance Windows desktop application composed of three main layers:
+NETSPECTRE is built as a modular, high-performance Windows desktop application designed to bridge low-level kernel socket dynamics with intuitive human intelligence.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                 NETSPECTRE FRONTEND SHELL                   │
-│  React 19 • TypeScript • Tailwind CSS • Three.js WebGL      │
-│  Zustand State Store • Lucide Cyberpunk Visual System       │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                  HTTP / REST / SSE IPC (Port 48123)
-                               │
-┌──────────────────────────────▼──────────────────────────────┐
-│             NATIVE WINDOWS TELEMETRY ENGINE                 │
-│         (src-engine/NetSpectreEngine.exe, 64-bit)           │
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐   │
-│   │ Win32 IP Helper P/Invoke (iphlpapi.dll)             │   │
-│   │ • GetExtendedTcpTable (IPv4 & IPv6 TCP Tables)      │   │
-│   │ • GetExtendedUdpTable (IPv4 & IPv6 UDP Tables)      │   │
-│   │ • GetIfTable2 / NetworkInterface Adapter Telemetry  │   │
-│   └─────────────────────────────────────────────────────┘   │
-│   ┌─────────────────────────────────────────────────────┐   │
-│   │ Process Identification & Kernel Correlation         │   │
-│   │ • QueryFullProcessImageNameW (kernel32.dll)         │   │
-│   │ • Process Name, PID, Executable Path Resolution     │   │
-│   └─────────────────────────────────────────────────────┘   │
-│   ┌─────────────────────────────────────────────────────┐   │
-│   │ Flow Metrics, ASN & GeoIP Intelligence              │   │
-│   │ • Microsecond flow duration & bandwidth apportionment│  │
-│   │ • Offline Autonomous System & Country Mapping       │   │
-│   │ • Standard Binary PCAP Generation Engine            │   │
-│   └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           NETSPECTRE FRONTEND SHELL                             │
+│   React 19 • TypeScript • Tailwind CSS • Three.js WebGL 60FPS                   │
+│   Zustand Store • Persona Switcher (Personal / Developer / Operations)          │
+└────────────────────────────────────────┬────────────────────────────────────────┘
+                                         │
+                    HTTP REST IPC (Port 48123, 750ms Polling)
+                                         │
+┌────────────────────────────────────────▼────────────────────────────────────────┐
+│                   NATIVE WINDOWS TELEMETRY & DIAGNOSTIC ENGINE                  │
+│                     (src-engine/NetSpectreEngine.exe, 64-bit)                   │
+│                                                                                 │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │ Win32 IP Helper P/Invoke (iphlpapi.dll)                                 │   │
+│   │ • GetExtendedTcpTable (IPv4 & IPv6 TCP Tables, States & PIDs)           │   │
+│   │ • GetExtendedUdpTable (IPv4 & IPv6 UDP Listener Tables)                 │   │
+│   │ • GetIfTable2 / NetworkInterface Throughput Counters                    │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │ Process Identification Subsystem (kernel32.dll)                         │   │
+│   │ • QueryFullProcessImageNameW (PROCESS_QUERY_LIMITED_INFORMATION)        │   │
+│   │ • Full Executable Path & Process Name Attribution                       │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │ V3.0 Diagnostic & Operational Services                                  │   │
+│   │ • NetworkDoctorService: Gateway, Internet, DNS & Wi-Fi Diagnostics      │   │
+│   │ • NetworkWorkbenchService: Ping, Traceroute, DNS, Port & TLS Probing    │   │
+│   │ • FirewallService: Windows Defender Firewall netsh Management           │   │
+│   │ • ApiInspectorService: HTTP/HTTPS Runner with Phase Waterfall & Masking │   │
+│   │ • IncidentRecorderService: Rolling Buffer & Forensic Snapshot Exporter   │   │
+│   │ • InfrastructureService: Multi-Device Reachability Monitoring           │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Windows Network Collection Layer
+## 2. Tri-Persona Architecture & User Workspaces
 
-### 2.1 TCP & UDP Table Inspection
-- Windows provides `iphlpapi.dll` with `GetExtendedTcpTable` using `TCP_TABLE_OWNER_PID_ALL` (value `5`).
-- This retrieves:
-  - Local IPv4/IPv6 Address & Port (network byte order handled)
-  - Remote IPv4/IPv6 Address & Port
-  - Connection State: `ESTABLISHED`, `LISTENING`, `TIME_WAIT`, `CLOSE_WAIT`, `SYN_SENT`, `FIN_WAIT1`, `FIN_WAIT2`, etc.
-  - Owning Process ID (`dwOwningPid`).
-- For UDP: `GetExtendedUdpTable` with `UDP_TABLE_OWNER_PID` is used for IPv4 and IPv6 listener sockets.
+### 2.1 Personal Workspace
+- **Target Audience:** Everyday Windows users, remote workers, home network managers.
+- **Components:**
+  - `NetworkDoctorScreen.tsx`: Automated health diagnostic calculating a 0–100 Health Quality Index with plain-English solutions.
+  - `InternetUsageScreen.tsx`: Per-app data volume progress bars, background bandwidth consumer detection, and tracker auditing.
+  - `FirewallControlScreen.tsx`: 1-click outbound executable blocking via Windows Defender Firewall with audit history.
 
-### 2.2 Process Attribution
-- Rather than relying solely on `Process.MainModule.FileName` (which can throw `Win32Exception` for elevated or 64-bit processes accessed by 32-bit processes), NETSPECTRE calls `QueryFullProcessImageName` using a limited information handle (`PROCESS_QUERY_LIMITED_INFORMATION = 0x1000`).
-- This guarantees reliable resolution of paths like:
-  - `C:\Program Files\Google\Chrome\Application\chrome.exe`
-  - `C:\Program Files\Microsoft\Edge\Application\msedge.exe`
-  - `C:\Program Files\Unity\Hub\Editor\...\Unity.exe`
-  - `C:\Windows\System32\svchost.exe`
-  - `C:\Windows\System32\ntoskrnl.exe`
+### 2.2 Developer Workspace
+- **Target Audience:** Software engineers, API developers, microservice architects.
+- **Components:**
+  - `ApiInspectorScreen.tsx`: REST API request runner with microsecond phase waterfall (DNS $\rightarrow$ TCP $\rightarrow$ TLS $\rightarrow$ TTFB $\rightarrow$ Download), automated token masking, and cURL / HAR exports.
+  - `ApiFailureAnalyzerScreen.tsx`: Automated root-cause diagnostics (DNS NXDOMAIN, TCP connection refused, SSL expired, CORS blocked, 502/504 timeouts) and developer playbooks.
+  - `EnvironmentMonitorScreen.tsx`: Reachability, response time, and SSL certificate expiration tracking across DEV, SIT, UAT, and PROD.
+  - `DataCommunicationExplorer.tsx`: OS-level network frame inspection and cryptographic TLS 1.3 / QUIC transparency disclosure.
 
-### 2.3 Bandwidth Counters & Rate Calculation
+### 2.3 Network Operations Workspace
+- **Target Audience:** IT administrators, network infrastructure specialists, SOC security analysts.
+- **Components:**
+  - `NetworkUniverse.tsx`: 2.5D orthographic neural highway with 5 columns (Local System $\rightarrow$ Applications $\rightarrow$ Protocols $\rightarrow$ Destinations $\rightarrow$ ASN/Cloud), directional amber/cyan particle flow, 5 visualization modes, and right-click context menu.
+  - `NetworkWorkbenchScreen.tsx`: Deep troubleshooting suite featuring Ping (with jitter/loss), Traceroute (with reverse DNS), DNS lookup, TCP Port Prober, TLS Certificate Inspector, Routing Table, and Adapter & MTU configuration.
+  - `IncidentRecorderScreen.tsx`: Freeze telemetry snapshots during outages and export forensic Markdown/JSON incident reports.
+  - `MultiMachineScreen.tsx`: Multi-device and infrastructure reachability monitoring.
+  - `PacketExplorer.tsx`: Circular packet buffer with protocol filtering and binary PCAP export for Wireshark.
+
+---
+
+## 3. Windows Kernel & Telemetry Layer
+
+### 3.1 Socket Flow Collection
+- Uses `GetExtendedTcpTable` with `TCP_TABLE_OWNER_PID_ALL` (value `5`) to retrieve all IPv4 and IPv6 TCP sockets, connection states (`ESTABLISHED`, `LISTENING`, `TIME_WAIT`, `CLOSE_WAIT`), and owning PIDs.
+- Uses `GetExtendedUdpTable` with `UDP_TABLE_OWNER_PID` (value `1`) for UDP listener sockets.
+
+### 3.2 Process Attribution
+- Calls `QueryFullProcessImageNameW` using `PROCESS_QUERY_LIMITED_INFORMATION = 0x1000`.
+- Avoids elevation exceptions while reliably resolving executable paths across system and user processes.
+
+### 3.3 Hardware-Level Rate Calculation
 - Interface counters are queried every 750ms using `NetworkInterface.GetAllNetworkInterfaces()`.
-- The delta bytes (`deltaIn`, `deltaOut`) divided by elapsed time gives instantaneous `totalDownloadBps` and `totalUploadBps`.
-- Flow rates are apportioned to active `ESTABLISHED` flows and accumulated over each socket's lifetime.
+- Bandwidth deltas divided by elapsed time calculate instantaneous downlink and uplink rates.
+- Rates are apportioned across active `ESTABLISHED` flows and accumulated over each socket's lifetime.
 
 ---
 
-## 3. WebGL Neural Network Universe (Three.js)
+## 4. Native Diagnostic Services (`NetSpectreEngine.cs`)
 
-The visualization engine utilizes Three.js with hardware acceleration targeting 60 FPS:
-- **Central Core Node**: Represents the local machine host (`127.0.0.1` / Wi-Fi / Ethernet adapter).
-- **Application Layer Nodes**: Positioned in a primary neural layer or orbital ring, sized by socket count and bandwidth volume, colored with custom process hues.
-- **Remote Endpoint Tier**: Grouped by IP, domain, and ASN.
-- **Curved Connectors**: Quadratic bezier curves (`THREE.QuadraticBezierCurve3`) compute smooth arches connecting endpoints.
-- **Directional Particle Flow**:
-  - Outgoing packets: Warm amber particles travelling outward ($t \to 1$).
-  - Incoming packets: Electric cyan particles travelling inward ($1 - t \to 0$).
-  - Particle speed and count dynamically adapt to live byte counters.
-- **Interactive Controls**:
-  - Left Mouse Drag: Spherical orbit rotation ($\theta, \phi$).
-  - Right Mouse Drag: 2D plane panning.
-  - Mouse Wheel: Camera distance zooming.
-  - Hover / Click: Screen-projected raycasting selection with instant HUD detail drawers.
+### 4.1 Network Doctor Service
+- Queries active gateway IPs, prioritizing non-virtual physical adapters over VPNs.
+- Pings Gateway and public internet backbones (`1.1.1.1` and `8.8.8.8`).
+- Measures DNS lookup latency against `cloudflare.com`.
+- Extracts Wi-Fi signal quality, SSID, and radio type via `netsh wlan show interfaces`.
+- Calculates an objective 0–100 Health Quality Index and generates structured actionable findings.
+
+### 4.2 Network Workbench Service
+- **Ping:** Sends ICMP echo requests with configurable count and timeout, tracking min/avg/max latency, packet loss %, and jitter.
+- **Traceroute:** Increments ICMP TTL from 1 to 20, recording hop IPs, reverse hostnames, and round-trip times.
+- **DNS Inspector:** Queries `Dns.GetHostEntry` for A, AAAA, and CNAME records, measuring query duration.
+- **Port Tester:** Executes non-blocking TCP connect handshakes and reads service greeting banners.
+- **TLS Inspector:** Completes TLS handshake via `SslStream`, extracting Subject, Issuer, Validity Dates, Days Remaining, Cipher Suite, and Subject Alternative Names (SANs).
+- **Routing Table:** Parses system IPv4 routing tables into structured records.
+- **Adapter Inspector:** Retrieves link speeds, MAC addresses, MTUs, and IPv4/IPv6 assignments.
+
+### 4.3 Firewall Service
+- Manages Windows Defender Firewall outbound rules via `netsh advfirewall firewall add/delete rule`.
+- Maintains an in-memory chronological audit log of all block and unblock actions.
+
+### 4.4 API Inspector Service
+- Executes HTTP/HTTPS requests with phase-by-phase `Stopwatch` timing (DNS, TCP, TLS, TTFB, Download).
+- Automatically masks sensitive headers (`Authorization`, `Cookie`, `X-Api-Key`, `Token`, `Secret`).
+- Generates deterministic root-cause analysis for any failed connection.
 
 ---
 
-## 4. Acceptance Test Results Matrix
+## 5. REST API Endpoint Reference (`http://127.0.0.1:48123`)
 
-| Acceptance Test | Requirement | Verified Result | Status |
-| :--- | :--- | :--- | :--- |
-| **TEST 1: Browser Request** | Detect real browser traffic, process, and endpoints | Chrome & Edge detected with real remote HTTPS endpoints (e.g. Cloudflare, Google, AWS) | ✅ **PASS** |
-| **TEST 2: ChatGPT Interaction** | Detect encrypted connections without claiming prompt decryption | Captured TLS 443 sockets to Cloudflare/OpenAI endpoints; clearly labeled encrypted | ✅ **PASS** |
-| **TEST 3: File Download** | Receiving bandwidth increases & animates links | Wi-Fi adapter rates sampled up to hundreds of KB/s with live incoming cyan particles | ✅ **PASS** |
-| **TEST 4: File Upload** | Transmitting bandwidth increases & reflects in graphs | Upload rates sampled up to 293 KB/s with live outgoing amber particles | ✅ **PASS** |
-| **TEST 5: App Filtering** | Filter by Chrome, Edge, Unity, etc. | Isolates selected application in both 3D graph and tabular inspector | ✅ **PASS** |
-| **TEST 6: Connection Details** | Inspector displays captured metadata | Full PID, path, remote IP, port, duration, bytes, ASN, country displayed | ✅ **PASS** |
-| **TEST 7: Traffic Disconnection** | Reacts to socket state changes | Engine detects closed sockets, emits `DISCONNECT` events, and updates active count | ✅ **PASS** |
-| **TEST 8: Historical Playback** | Timeline reproduces recorded activity | Timeline scrubber steps through rolling buffer of captured snapshots | ✅ **PASS** |
-| **TEST 9: High Traffic Load** | App remains responsive, bounded memory | Bounded buffers (120 history snapshots, 500 events, 1000 packet samples) prevent memory leaks | ✅ **PASS** |
-| **TEST 10: PCAP Export** | Generates real binary PCAP for Wireshark | Verified 391 KB PCAP file generated with magic header `0xa1b2c3d4` | ✅ **PASS** |
+| HTTP Method | URI Path | Service |
+| :--- | :--- | :--- |
+| `GET` | `/api/status` or `/api/telemetry` | Full telemetry snapshot. |
+| `GET` | `/api/history` | Rolling 60-point throughput history buffer. |
+| `GET` | `/api/pcap/export` | Generates standard binary PCAP capture file. |
+| `GET` | `/api/diagnose/doctor` | Health diagnostic (Gateway, Internet, DNS, Wi-Fi, Score). |
+| `GET` | `/api/workbench/ping` | ICMP Ping test with min/avg/max/jitter statistics. |
+| `GET` | `/api/workbench/traceroute` | ICMP TTL-increment traceroute with reverse hostnames. |
+| `GET` | `/api/workbench/dns` | DNS records (A, AAAA, CNAME) and resolution speed. |
+| `GET` | `/api/workbench/port` | TCP 3-way handshake connect latency and service banner. |
+| `GET` | `/api/workbench/tls` | TLS handshake, certificate expiry, SANs, and ciphers. |
+| `GET` | `/api/workbench/routes` | System IPv4 routing table. |
+| `GET` | `/api/workbench/adapters` | Physical and virtual adapters with link speeds and MACs. |
+| `GET` | `/api/firewall/rules` | Lists active NETSPECTRE firewall block rules. |
+| `POST` | `/api/firewall/block` | Adds outbound executable block rule via `netsh`. |
+| `POST` | `/api/firewall/unblock` | Deletes outbound executable rule via `netsh`. |
+| `POST` | `/api/api-inspector/execute` | Executes HTTP/HTTPS request with waterfall metrics. |
+| `GET` | `/api/api-inspector/history` | Returns recent developer API executions. |
+| `POST` | `/api/incident/snapshot` | Freezes current network state and compiles incident report. |
+| `GET` | `/api/incident/report` | Returns last recorded forensic report. |
+| `GET` | `/api/devices` | Probes default gateway, DNS resolvers, and cloud endpoints. |
+| `POST` | `/api/shutdown` | Graceful engine termination. |
