@@ -17,6 +17,21 @@ import { TrafficAnalytics } from './components/screens/TrafficAnalytics';
 import { SecurityScreen } from './components/screens/SecurityScreen';
 import { SettingsScreen } from './components/screens/SettingsScreen';
 
+// Personal Workspace Screens
+import { NetworkDoctorScreen } from './components/screens/personal/NetworkDoctorScreen';
+import { InternetUsageScreen } from './components/screens/personal/InternetUsageScreen';
+import { FirewallControlScreen } from './components/screens/personal/FirewallControlScreen';
+
+// Developer Workspace Screens
+import { ApiInspectorScreen } from './components/screens/developer/ApiInspectorScreen';
+import { ApiFailureAnalyzerScreen } from './components/screens/developer/ApiFailureAnalyzerScreen';
+import { EnvironmentMonitorScreen } from './components/screens/developer/EnvironmentMonitorScreen';
+
+// Operations Workspace Screens
+import { NetworkWorkbenchScreen } from './components/screens/operations/NetworkWorkbenchScreen';
+import { IncidentRecorderScreen } from './components/screens/operations/IncidentRecorderScreen';
+import { MultiMachineScreen } from './components/screens/operations/MultiMachineScreen';
+
 export const App: React.FC = () => {
   const {
     activeScreen,
@@ -85,6 +100,21 @@ export const App: React.FC = () => {
             {activeScreen === 'analytics' && <TrafficAnalytics />}
             {activeScreen === 'security' && <SecurityScreen />}
             {activeScreen === 'settings' && <SettingsScreen />}
+
+            {/* Personal Workspace */}
+            {activeScreen === 'network-doctor' && <NetworkDoctorScreen />}
+            {activeScreen === 'internet-usage' && <InternetUsageScreen />}
+            {activeScreen === 'firewall' && <FirewallControlScreen />}
+
+            {/* Developer Workspace */}
+            {activeScreen === 'api-debugger' && <ApiInspectorScreen />}
+            {activeScreen === 'api-failure-analyzer' && <ApiFailureAnalyzerScreen />}
+            {activeScreen === 'env-monitor' && <EnvironmentMonitorScreen />}
+
+            {/* Network Operations Workspace */}
+            {activeScreen === 'workbench' && <NetworkWorkbenchScreen />}
+            {activeScreen === 'incident-recorder' && <IncidentRecorderScreen />}
+            {activeScreen === 'devices' && <MultiMachineScreen />}
           </div>
 
           {/* Bottom Activity Timeline */}

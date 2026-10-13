@@ -90,6 +90,8 @@ export interface TimelinePoint {
   active: number;
 }
 
+export type WorkspaceId = 'personal' | 'developer' | 'operations';
+
 export type ScreenId =
   | 'command-center'
   | 'data-explorer'
@@ -100,7 +102,198 @@ export type ScreenId =
   | 'timeline'
   | 'analytics'
   | 'security'
-  | 'settings';
+  | 'settings'
+  // Personal Workspace
+  | 'network-doctor'
+  | 'internet-usage'
+  | 'firewall'
+  // Developer Workspace
+  | 'api-debugger'
+  | 'api-failure-analyzer'
+  | 'env-monitor'
+  // Network Operations Workspace
+  | 'workbench'
+  | 'incident-recorder'
+  | 'devices';
+
+export interface DoctorFinding {
+  id: string;
+  severity: 'healthy' | 'warning' | 'critical';
+  category: string;
+  title: string;
+  explanation: string;
+  recommendedAction: string;
+  isFixable: boolean;
+}
+
+export interface DoctorDiagnosticResult {
+  score: number;
+  status: 'EXCELLENT' | 'GOOD' | 'DEGRADED' | 'CRITICAL';
+  gatewayIp: string;
+  gatewayLatencyMs: number;
+  gatewayOk: boolean;
+  internetLatencyMs: number;
+  internetOk: boolean;
+  dnsLatencyMs: number;
+  dnsOk: boolean;
+  adapterName: string;
+  wifiSsid: string;
+  wifiSignalPercent: number;
+  diagnosticDurationMs: number;
+  timestamp: number;
+  findings: DoctorFinding[];
+}
+
+export interface PingHop {
+  seq: number;
+  rttMs: number;
+  ttl: number;
+  status: string;
+}
+
+export interface PingResult {
+  target: string;
+  resolvedIp: string;
+  count: number;
+  hops: PingHop[];
+  packetsSent: number;
+  packetsReceived: number;
+  packetLossPct: number;
+  minRttMs: number;
+  maxRttMs: number;
+  avgRttMs: number;
+  jitterMs: number;
+}
+
+export interface TracerouteHop {
+  hop: number;
+  ip: string;
+  hostname: string;
+  rttMs: number;
+  status: string;
+}
+
+export interface TracerouteResult {
+  target: string;
+  resolvedIp: string;
+  maxHops: number;
+  hops: TracerouteHop[];
+}
+
+export interface DnsRecord {
+  type: string;
+  value: string;
+}
+
+export interface DnsLookupResult {
+  host: string;
+  recordType: string;
+  canonicalName: string;
+  queryTimeMs: number;
+  error: string;
+  records: DnsRecord[];
+}
+
+export interface PortTestResult {
+  host: string;
+  port: number;
+  isOpen: boolean;
+  connectTimeMs: number;
+  banner: string;
+  error: string;
+}
+
+export interface TlsInspectResult {
+  host: string;
+  port: number;
+  handshakeTimeMs: number;
+  isValid: boolean;
+  subject: string;
+  issuer: string;
+  validFrom: string;
+  validTo: string;
+  daysRemaining: number;
+  isExpired: boolean;
+  cipherSuite: string;
+  protocol: string;
+  sans: string;
+  error: string;
+}
+
+export interface RouteEntry {
+  destination: string;
+  netmask: string;
+  gateway: string;
+  interface: string;
+  metric: number;
+}
+
+export interface AdapterDetail {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  speedMbps: number;
+  macAddress: string;
+  ipv4: string[];
+  ipv6: string[];
+  gateways: string[];
+  dns: string[];
+}
+
+export interface FirewallRule {
+  ruleName: string;
+  program: string;
+  action: string;
+  enabled: boolean;
+}
+
+export interface FirewallAuditEntry {
+  timestamp: number;
+  action: 'BLOCK' | 'UNBLOCK';
+  processName?: string;
+  ruleName: string;
+  success: boolean;
+}
+
+export interface ApiExecutionResult {
+  url: string;
+  method: string;
+  statusCode: number;
+  statusDescription: string;
+  totalMs: number;
+  dnsMs: number;
+  connectMs: number;
+  sslMs: number;
+  ttfbMs: number;
+  downloadMs: number;
+  respBytes: number;
+  headers: Record<string, string>;
+  body: string;
+  rootCause: string;
+  timestamp: number;
+}
+
+export interface EnvEndpoint {
+  id: string;
+  name: string;
+  env: 'DEV' | 'SIT' | 'UAT' | 'PROD';
+  url: string;
+  status: 'ONLINE' | 'DEGRADED' | 'OFFLINE' | 'CHECKING';
+  latencyMs: number;
+  tlsDaysRemaining?: number;
+  lastChecked?: number;
+}
+
+export interface InfrastructureDevice {
+  id: string;
+  name: string;
+  host: string;
+  role: string;
+  status: 'ONLINE' | 'OFFLINE';
+  latencyMs: number;
+}
 
 export type VisMode = 'neural-flow' | 'app-map' | 'data-stream' | 'dest-map' | 'protocol-matrix';
 export type NodeSizingMode = 'bandwidth' | 'flows' | 'uniform';

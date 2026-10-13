@@ -12,6 +12,10 @@ import {
   Cpu,
   Server,
   Layers,
+  Share2,
+  Zap,
+  Lock,
+  Stethoscope,
 } from 'lucide-react';
 
 interface ColumnNode {
@@ -150,10 +154,15 @@ export const NetworkUniverse: React.FC = () => {
     enableParticles,
     nodeSizingMode,
     hideInactive,
+    enginePort,
+    launchWorkbenchTool,
+    setActiveScreen,
   } = useNetworkStore();
 
   const [hoveredNode, setHoveredNode] = useState<ColumnNode | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [contextMenuNode, setContextMenuNode] = useState<ColumnNode | null>(null);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Camera & interaction state
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -917,6 +926,9 @@ export const NetworkUniverse: React.FC = () => {
   };
 
   const handleClick = () => {
+    if (contextMenuNode) {
+      setContextMenuNode(null);
+    }
     if (hoveredNode) {
       setSelectedNodeId(hoveredNode.id);
       if (hoveredNode.column === 2) {
@@ -926,6 +938,38 @@ export const NetworkUniverse: React.FC = () => {
       }
     } else {
       setSelectedNodeId(null);
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!canvasRef.current || !cameraRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const w = rect.width;
+    const h = rect.height;
+    const frustumW = 650 * (w / h);
+    const frustumH = 650;
+
+    const worldX = ((mouseX / w) * frustumW - frustumW / 2 - panRef.current.x) / zoomRef.current;
+    const worldY = (-(mouseY / h) * frustumH + frustumH / 2 - panRef.current.y) / zoomRef.current;
+
+    let found: ColumnNode | null = null;
+    for (const node of nodesRef.current) {
+      const dist = Math.hypot(node.x - worldX, node.y - worldY);
+      if (dist < node.size + 16) {
+        found = node;
+        break;
+      }
+    }
+
+    if (found) {
+      setContextMenuNode(found);
+      setContextMenuPos({ x: e.clientX, y: e.clientY });
+    } else {
+      setContextMenuNode(null);
     }
   };
 
@@ -943,7 +987,7 @@ export const NetworkUniverse: React.FC = () => {
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
       onClick={handleClick}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={handleContextMenu}
     >
       <canvas ref={canvasRef} className="w-full h-full block cursor-grab active:cursor-grabbing" />
 
@@ -1036,7 +1080,7 @@ export const NetworkUniverse: React.FC = () => {
       </div>
 
       {/* Floating Hover Context Card */}
-      {hoveredNode && (
+      {hoveredNode && !contextMenuNode && (
         <div
           className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-3"
           style={{ left: hoverPos.x, top: hoverPos.y }}
@@ -1068,6 +1112,146 @@ export const NetworkUniverse: React.FC = () => {
                 </span>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Right-Click Sci-Fi Context Menu */}
+      {contextMenuNode && (
+        <div
+          className="fixed z-50 p-2 rounded-2xl bg-[#0a1024]/95 backdrop-blur-2xl border border-cyan-400/50 shadow-2xl shadow-cyan-950/90 text-xs font-mono text-slate-200 min-w-[250px] animate-in fade-in zoom-in-95 duration-150"
+          style={{
+            left: Math.min(window.innerWidth - 270, contextMenuPos.x),
+            top: Math.min(window.innerHeight - 320, contextMenuPos.y),
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-2.5 py-1.5 border-b border-cyan-500/20 text-[10px] text-slate-400 flex items-center justify-between">
+            <span className="font-bold text-cyan-300 truncate max-w-[170px]">
+              {contextMenuNode.label}
+            </span>
+            <span className="text-[9px] uppercase tracking-wider text-slate-400">
+              COLUMN {contextMenuNode.column}
+            </span>
+          </div>
+
+          <div className="py-1 space-y-0.5">
+            {/* Column 4: Remote Destination Tools */}
+            {contextMenuNode.column === 4 && (
+              <>
+                <button
+                  onClick={() => {
+                    const target = contextMenuNode.meta?.remoteAddress || '1.1.1.1';
+                    launchWorkbenchTool('ping', target);
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/70 hover:text-cyan-300 flex items-center space-x-2 transition"
+                >
+                  <Radio className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Test Ping Reachability</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const target = contextMenuNode.meta?.remoteAddress || '1.1.1.1';
+                    launchWorkbenchTool('traceroute', target);
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/70 hover:text-cyan-300 flex items-center space-x-2 transition"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Trace Route (Traceroute)</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const target =
+                      contextMenuNode.meta?.domain || contextMenuNode.meta?.remoteAddress || '1.1.1.1';
+                    launchWorkbenchTool('dns', target);
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/70 hover:text-cyan-300 flex items-center space-x-2 transition"
+                >
+                  <Globe className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Inspect DNS Records</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const target = contextMenuNode.meta?.remoteAddress || '1.1.1.1';
+                    launchWorkbenchTool('port', target);
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/70 hover:text-cyan-300 flex items-center space-x-2 transition"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Test TCP Port Reachability</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const target =
+                      contextMenuNode.meta?.domain || contextMenuNode.meta?.remoteAddress || '1.1.1.1';
+                    launchWorkbenchTool('tls', target);
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/70 hover:text-cyan-300 flex items-center space-x-2 transition"
+                >
+                  <Lock className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Inspect TLS Certificate</span>
+                </button>
+              </>
+            )}
+
+            {/* Column 2: Application Node Tools */}
+            {contextMenuNode.column === 2 && (
+              <>
+                <button
+                  onClick={async () => {
+                    if (contextMenuNode.meta) {
+                      await fetch(`http://127.0.0.1:${enginePort}/api/firewall/block`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          processName: contextMenuNode.meta.processName,
+                          executablePath: contextMenuNode.meta.executablePath,
+                        }),
+                      });
+                      setActiveScreen('firewall');
+                    }
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-rose-950/70 text-rose-300 flex items-center space-x-2 transition"
+                >
+                  <Lock className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Block in Windows Firewall</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (contextMenuNode.meta) setSelectedApplication(contextMenuNode.meta);
+                    setActiveScreen('applications');
+                    setContextMenuNode(null);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-950/70 hover:text-cyan-300 flex items-center space-x-2 transition"
+                >
+                  <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Inspect Application Details</span>
+                </button>
+              </>
+            )}
+
+            {/* Universal Network Doctor Action */}
+            <button
+              onClick={() => {
+                setActiveScreen('network-doctor');
+                setContextMenuNode(null);
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-purple-950/70 text-purple-300 flex items-center space-x-2 transition border-t border-cyan-500/15 mt-1"
+            >
+              <Stethoscope className="w-3.5 h-3.5 text-purple-400" />
+              <span>Diagnose with Network Doctor</span>
+            </button>
           </div>
         </div>
       )}

@@ -7,6 +7,9 @@ import {
   TelemetrySnapshot,
   TimelinePoint,
   ScreenId,
+  WorkspaceId,
+  VisMode,
+  NodeSizingMode,
 } from '../types/network';
 
 interface NetworkState {
@@ -28,10 +31,15 @@ interface NetworkState {
   historyPoints: TimelinePoint[];
 
   // Navigation & Selection
+  activeWorkspace: WorkspaceId;
   activeScreen: ScreenId;
   selectedConnection: ConnectionRecord | null;
   selectedApplication: ApplicationRecord | null;
   selectedNodeId: string | null;
+
+  // Workbench Quick Jump
+  workbenchTarget: string;
+  workbenchActiveTool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters';
 
   // Search & Filter
   searchQuery: string;
@@ -62,6 +70,10 @@ interface NetworkState {
   freezeLayout: boolean;
 
   // Actions
+  setActiveWorkspace: (workspace: WorkspaceId) => void;
+  setWorkbenchTarget: (target: string) => void;
+  setWorkbenchActiveTool: (tool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters') => void;
+  launchWorkbenchTool: (tool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters', target: string) => void;
   setVisMode: (mode: VisMode) => void;
   setNodeSizingMode: (mode: NodeSizingMode) => void;
   toggleHideInactive: () => void;
@@ -106,10 +118,14 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
   packetSamples: [],
   historyPoints: [],
 
-  activeScreen: 'command-center',
+  activeWorkspace: 'personal',
+  activeScreen: 'network-doctor',
   selectedConnection: null,
   selectedApplication: null,
   selectedNodeId: null,
+
+  workbenchTarget: '1.1.1.1',
+  workbenchActiveTool: 'ping',
 
   searchQuery: '',
   filterProtocol: 'ALL',
@@ -134,6 +150,22 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
   hideInactive: false,
   freezeLayout: false,
 
+  setActiveWorkspace: (workspace) => {
+    let defaultScreen: ScreenId = 'network-doctor';
+    if (workspace === 'developer') defaultScreen = 'api-debugger';
+    else if (workspace === 'operations') defaultScreen = 'command-center';
+    set({ activeWorkspace: workspace, activeScreen: defaultScreen });
+  },
+  setWorkbenchTarget: (target) => set({ workbenchTarget: target }),
+  setWorkbenchActiveTool: (tool) => set({ workbenchActiveTool: tool }),
+  launchWorkbenchTool: (tool, target) => {
+    set({
+      activeWorkspace: 'operations',
+      activeScreen: 'workbench',
+      workbenchActiveTool: tool,
+      workbenchTarget: target,
+    });
+  },
   setVisMode: (mode) => set({ visMode: mode }),
   setNodeSizingMode: (mode) => set({ nodeSizingMode: mode }),
   toggleHideInactive: () => set((state) => ({ hideInactive: !state.hideInactive })),

@@ -13,6 +13,9 @@ import {
   Radio,
   SlidersHorizontal,
   RefreshCw,
+  User,
+  Code2,
+  Network,
 } from 'lucide-react';
 
 export const TopBar: React.FC = () => {
@@ -29,6 +32,8 @@ export const TopBar: React.FC = () => {
     togglePause,
     setActiveScreen,
     enginePort,
+    activeWorkspace,
+    setActiveWorkspace,
   } = useNetworkStore();
 
   const handleExportPcap = () => {
@@ -36,9 +41,9 @@ export const TopBar: React.FC = () => {
   };
 
   return (
-    <header className="h-14 border-b border-cyan-500/20 bg-[#070b16]/90 backdrop-blur-xl px-4 flex items-center justify-between z-30 select-none">
-      {/* Brand & Live Status */}
-      <div className="flex items-center space-x-4">
+    <header className="h-14 border-b border-cyan-500/20 bg-[#070b16]/95 backdrop-blur-xl px-4 flex items-center justify-between z-30 select-none">
+      {/* Brand & Workspace Switcher */}
+      <div className="flex items-center space-x-6">
         <div className="flex items-center space-x-2.5">
           <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-400/40 shadow-lg shadow-cyan-500/20">
             <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
@@ -50,7 +55,7 @@ export const TopBar: React.FC = () => {
                 NETSPECTRE
               </span>
               <span className="px-1.5 py-0.5 text-[9px] font-mono font-semibold rounded bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
-                v2.4 WIN-NATIVE
+                v3.0 ENTERPRISE
               </span>
             </div>
             <div className="text-[10px] text-slate-400 tracking-tight flex items-center space-x-1.5">
@@ -64,6 +69,46 @@ export const TopBar: React.FC = () => {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Persona Workspaces Switcher */}
+        <div className="hidden md:flex items-center space-x-1 bg-[#091024] p-1 rounded-xl border border-cyan-500/30 shadow-inner">
+          <button
+            onClick={() => setActiveWorkspace('personal')}
+            className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold flex items-center space-x-1.5 transition ${
+              activeWorkspace === 'personal'
+                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-400/50 shadow-md shadow-cyan-500/10'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Personal Workspace for Everyday Windows Users"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Personal</span>
+          </button>
+          <button
+            onClick={() => setActiveWorkspace('developer')}
+            className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold flex items-center space-x-1.5 transition ${
+              activeWorkspace === 'developer'
+                ? 'bg-purple-500/25 text-purple-300 border border-purple-400/50 shadow-md shadow-purple-500/10'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Developer Workspace for Software & API Engineers"
+          >
+            <Code2 className="w-3.5 h-3.5" />
+            <span>Developer</span>
+          </button>
+          <button
+            onClick={() => setActiveWorkspace('operations')}
+            className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold flex items-center space-x-1.5 transition ${
+              activeWorkspace === 'operations'
+                ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 shadow-md shadow-emerald-500/10'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Network Operations Workspace for IT & Security Engineers"
+          >
+            <Network className="w-3.5 h-3.5" />
+            <span>Network Ops</span>
+          </button>
         </div>
       </div>
 

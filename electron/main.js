@@ -79,38 +79,54 @@ function createWindow() {
           console.log('[NETSPECTRE] Captured live window screenshot to:', shotPath);
 
           if (process.argv.includes('--capture-all')) {
-            console.log('[NETSPECTRE] Capturing App Map Mode...');
+            console.log('[NETSPECTRE] Capturing Personal Workspace (Network Doctor)...');
             await mainWindow.webContents.executeJavaScript(`
-              window.__useNetworkStore?.getState().setVisMode('app-map');
+              window.__useNetworkStore?.getState().setActiveWorkspace('personal');
+              window.__useNetworkStore?.getState().setActiveScreen('network-doctor');
+            `);
+            await new Promise((r) => setTimeout(r, 2000));
+            img = await mainWindow.webContents.capturePage();
+            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_doctor.png'), img.toPNG());
+            console.log('[NETSPECTRE] Captured netspectre_doctor.png');
+
+            console.log('[NETSPECTRE] Capturing Personal Workspace (App Firewall)...');
+            await mainWindow.webContents.executeJavaScript(`
+              window.__useNetworkStore?.getState().setActiveScreen('firewall');
             `);
             await new Promise((r) => setTimeout(r, 1500));
             img = await mainWindow.webContents.capturePage();
-            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_app_map.png'), img.toPNG());
-            console.log('[NETSPECTRE] Captured netspectre_app_map.png');
+            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_firewall.png'), img.toPNG());
+            console.log('[NETSPECTRE] Captured netspectre_firewall.png');
 
-            console.log('[NETSPECTRE] Capturing Protocol Matrix Mode...');
+            console.log('[NETSPECTRE] Capturing Developer Workspace (API Traffic Debugger)...');
             await mainWindow.webContents.executeJavaScript(`
-              window.__useNetworkStore?.getState().setVisMode('protocol-matrix');
+              window.__useNetworkStore?.getState().setActiveWorkspace('developer');
+              window.__useNetworkStore?.getState().setActiveScreen('api-debugger');
             `);
             await new Promise((r) => setTimeout(r, 1500));
             img = await mainWindow.webContents.capturePage();
-            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_protocol_matrix.png'), img.toPNG());
-            console.log('[NETSPECTRE] Captured netspectre_protocol_matrix.png');
+            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_api_debugger.png'), img.toPNG());
+            console.log('[NETSPECTRE] Captured netspectre_api_debugger.png');
 
-            console.log('[NETSPECTRE] Capturing Data Communication Explorer Screen...');
+            console.log('[NETSPECTRE] Capturing Operations Workspace (Troubleshooting Workbench)...');
             await mainWindow.webContents.executeJavaScript(`
-              window.__useNetworkStore?.getState().setActiveScreen('data-explorer');
+              window.__useNetworkStore?.getState().setActiveWorkspace('operations');
+              window.__useNetworkStore?.getState().setActiveScreen('workbench');
             `);
             await new Promise((r) => setTimeout(r, 1500));
             img = await mainWindow.webContents.capturePage();
-            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_data_explorer.png'), img.toPNG());
-            console.log('[NETSPECTRE] Captured netspectre_data_explorer.png');
+            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_workbench.png'), img.toPNG());
+            console.log('[NETSPECTRE] Captured netspectre_workbench.png');
 
-            // Reset back
+            console.log('[NETSPECTRE] Capturing Operations Workspace (Neural Highway Universe)...');
             await mainWindow.webContents.executeJavaScript(`
               window.__useNetworkStore?.getState().setActiveScreen('command-center');
               window.__useNetworkStore?.getState().setVisMode('neural-flow');
             `);
+            await new Promise((r) => setTimeout(r, 2000));
+            img = await mainWindow.webContents.capturePage();
+            fs.writeFileSync(path.join(__dirname, '..', 'netspectre_neural_highway.png'), img.toPNG());
+            console.log('[NETSPECTRE] Captured netspectre_neural_highway.png');
           }
 
           if (process.argv.includes('--capture-and-exit') || process.argv.includes('--capture-all')) {

@@ -13,6 +13,14 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Stethoscope,
+  Eye,
+  Lock,
+  Code2,
+  Bug,
+  Server,
+  Wrench,
+  Camera,
 } from 'lucide-react';
 
 interface NavItem {
@@ -25,6 +33,7 @@ interface NavItem {
 
 export const Sidebar: React.FC = () => {
   const {
+    activeWorkspace,
     activeScreen,
     setActiveScreen,
     connections,
@@ -36,66 +45,150 @@ export const Sidebar: React.FC = () => {
 
   const suspiciousCount = connections.filter((c) => c.isSuspicious).length;
 
-  const navItems: NavItem[] = [
-    {
-      id: 'command-center',
-      label: 'Neural Universe',
-      icon: LayoutDashboard,
-    },
-    {
-      id: 'data-explorer',
-      label: 'Data Explorer',
-      icon: Binary,
-      badge: 'NEW',
-      badgeColor: 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40',
-    },
-    {
-      id: 'applications',
-      label: 'Applications',
-      icon: Cpu,
-      badge: applications.length,
-      badgeColor: 'bg-purple-900/60 text-purple-300 border-purple-500/30',
-    },
-    {
-      id: 'connections',
-      label: 'Connections',
-      icon: Network,
-      badge: connections.length,
-      badgeColor: 'bg-cyan-950/60 text-cyan-300 border-cyan-500/30',
-    },
-    {
-      id: 'packets',
-      label: 'Packet Explorer',
-      icon: Binary,
-    },
-    {
-      id: 'destinations',
-      label: 'Destinations',
-      icon: Globe2,
-    },
-    {
-      id: 'timeline',
-      label: 'Time Travel',
-      icon: Clock,
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: BarChart3,
-    },
-    {
-      id: 'security',
-      label: 'Security & Threats',
-      icon: ShieldAlert,
-      badge: suspiciousCount > 0 ? suspiciousCount : undefined,
-      badgeColor: 'bg-rose-950/80 text-rose-300 border-rose-500/50 animate-pulse',
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: Settings,
-    },
-  ];
+  let navItems: NavItem[] = [];
+
+  if (activeWorkspace === 'personal') {
+    navItems = [
+      {
+        id: 'network-doctor',
+        label: 'Network Doctor',
+        icon: Stethoscope,
+        badge: '1-CLICK',
+        badgeColor: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40',
+      },
+      {
+        id: 'internet-usage',
+        label: 'Usage & Privacy',
+        icon: Eye,
+      },
+      {
+        id: 'firewall',
+        label: 'App Firewall',
+        icon: Lock,
+      },
+      {
+        id: 'command-center',
+        label: 'Neural Universe',
+        icon: LayoutDashboard,
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: Settings,
+      },
+    ];
+  } else if (activeWorkspace === 'developer') {
+    navItems = [
+      {
+        id: 'api-debugger',
+        label: 'API Debugger',
+        icon: Code2,
+        badge: 'TIMING',
+        badgeColor: 'bg-purple-950/80 text-purple-300 border-purple-500/40',
+      },
+      {
+        id: 'api-failure-analyzer',
+        label: 'Failure Analyzer',
+        icon: Bug,
+      },
+      {
+        id: 'env-monitor',
+        label: 'Environment Monitor',
+        icon: Server,
+        badge: 'DEV/PROD',
+        badgeColor: 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40',
+      },
+      {
+        id: 'data-explorer',
+        label: 'Data Explorer',
+        icon: Binary,
+      },
+      {
+        id: 'command-center',
+        label: 'Neural Universe',
+        icon: LayoutDashboard,
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: Settings,
+      },
+    ];
+  } else {
+    // Operations Workspace
+    navItems = [
+      {
+        id: 'command-center',
+        label: 'Neural Highway',
+        icon: LayoutDashboard,
+      },
+      {
+        id: 'workbench',
+        label: 'Troubleshooting',
+        icon: Wrench,
+        badge: 'TOOLS',
+        badgeColor: 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40',
+      },
+      {
+        id: 'packets',
+        label: 'Packet Capture',
+        icon: Binary,
+      },
+      {
+        id: 'incident-recorder',
+        label: 'Incident Recorder',
+        icon: Camera,
+        badge: 'AUDIT',
+        badgeColor: 'bg-rose-950/80 text-rose-300 border-rose-500/40',
+      },
+      {
+        id: 'devices',
+        label: 'Infrastructure',
+        icon: Server,
+      },
+      {
+        id: 'security',
+        label: 'Threat Matrix',
+        icon: ShieldAlert,
+        badge: suspiciousCount > 0 ? suspiciousCount : undefined,
+        badgeColor: 'bg-rose-950/80 text-rose-300 border-rose-500/50 animate-pulse',
+      },
+      {
+        id: 'applications',
+        label: 'Applications',
+        icon: Cpu,
+        badge: applications.length,
+        badgeColor: 'bg-purple-900/60 text-purple-300 border-purple-500/30',
+      },
+      {
+        id: 'connections',
+        label: 'Connections',
+        icon: Network,
+        badge: connections.length,
+        badgeColor: 'bg-cyan-950/60 text-cyan-300 border-cyan-500/30',
+      },
+      {
+        id: 'destinations',
+        label: 'Destinations',
+        icon: Globe2,
+      },
+      {
+        id: 'timeline',
+        label: 'Time Travel',
+        icon: Clock,
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        icon: BarChart3,
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: Settings,
+      },
+    ];
+  }
 
   return (
     <aside
