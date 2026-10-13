@@ -12,6 +12,7 @@ import {
   Clock,
   Layers,
   ArrowRight,
+  Trash2,
 } from 'lucide-react';
 
 const INITIAL_ENVIRONMENTS: EnvEndpoint[] = [
@@ -54,7 +55,7 @@ const INITIAL_ENVIRONMENTS: EnvEndpoint[] = [
 ];
 
 export const EnvironmentMonitorScreen: React.FC = () => {
-  const { enginePort, launchWorkbenchTool } = useNetworkStore();
+  const { enginePort, launchWorkbenchTool, authToken } = useNetworkStore();
   const [endpoints, setEndpoints] = useState<EnvEndpoint[]>(INITIAL_ENVIRONMENTS);
   const [refreshing, setRefreshing] = useState(false);
   const [filterEnv, setFilterEnv] = useState<'ALL' | 'DEV' | 'SIT' | 'UAT' | 'PROD'>('ALL');
@@ -65,10 +66,47 @@ export const EnvironmentMonitorScreen: React.FC = () => {
   const [newUrl, setNewUrl] = useState('');
   const [newEnv, setNewEnv] = useState<'DEV' | 'SIT' | 'UAT' | 'PROD'>('DEV');
 
+  const getHeaders = (hasBody = false) => {
+    const h: Record<string, string> = {};
+    if (hasBody) h['Content-Type'] = 'application/json';
+    if (authToken) h['X-NetSpectre-Auth'] = authToken;
+    return h;
+  };
+
+  const loadEndpoints = async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/env-monitor/endpoints`, {
+        headers: getHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.endpoints && data.endpoints.length > 0) {
+          setEndpoints(data.endpoints);
+        }
+      }
+    } catch { }
+  };
+
+  useEffect(() => {
+    loadEndpoints();
+  }, [enginePort, authToken]);
+
+  const saveEndpointsToBackend = async (eps: EnvEndpoint[]) => {
+    try {
+      await fetch(`http://127.0.0.1:${enginePort}/api/env-monitor/save`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify(eps),
+      });
+    } catch { }
+  };
+
   const checkEndpoint = async (ep: EnvEndpoint) => {
     try {
       const cleanHost = ep.url.replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/port?host=${cleanHost}&port=443&timeout=2000`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/port?host=${cleanHost}&port=443&timeout=2000`, {
+        headers: getHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         return {
@@ -86,6 +124,7 @@ export const EnvironmentMonitorScreen: React.FC = () => {
     const updated = await Promise.all(endpoints.map((ep) => checkEndpoint(ep)));
     setEndpoints(updated);
     setRefreshing(false);
+    saveEndpointsToBackend(updated);
   };
 
   const handleAddEndpoint = () => {
@@ -99,13 +138,26 @@ export const EnvironmentMonitorScreen: React.FC = () => {
       latencyMs: 0,
       tlsDaysRemaining: 90,
     };
-    setEndpoints([newEp, ...endpoints]);
+    const updated = [newEp, ...endpoints];
+    setEndpoints(updated);
+    saveEndpointsToBackend(updated);
     setShowAddModal(false);
     setNewName('');
     setNewUrl('');
     checkEndpoint(newEp).then((checked) => {
-      setEndpoints((prev) => prev.map((e) => (e.id === newEp.id ? checked : e)));
+      setEndpoints((prev) => {
+        const list = prev.map((e) => (e.id === newEp.id ? checked : e));
+        saveEndpointsToBackend(list);
+        return list;
+      });
     });
+  };
+
+  const handleDeleteEndpoint = (id: string) => {
+    if (!confirm('Remove this environment endpoint from monitoring?')) return;
+    const updated = endpoints.filter((e) => e.id !== id);
+    setEndpoints(updated);
+    saveEndpointsToBackend(updated);
   };
 
   const filteredEndpoints =
@@ -257,6 +309,13 @@ export const EnvironmentMonitorScreen: React.FC = () => {
                   title="Test Ping in Workbench"
                 >
                   Ping
+                </button>
+                <button
+                  onClick={() => handleDeleteEndpoint(ep.id)}
+                  className="p-1.5 rounded-lg bg-rose-950/60 text-rose-400 border border-rose-500/30 hover:bg-rose-900 transition"
+                  title="Remove Endpoint"
+                >
+                  <Trash2 className="w-3 h-3" />
                 </button>
               </div>
             </div>

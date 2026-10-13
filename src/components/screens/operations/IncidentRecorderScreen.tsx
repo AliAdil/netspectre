@@ -16,38 +16,62 @@ import {
 } from 'lucide-react';
 
 export const IncidentRecorderScreen: React.FC = () => {
-  const { enginePort, totalDownloadBps, totalUploadBps, applications, connections, primaryAdapter } = useNetworkStore();
+  const { enginePort, totalDownloadBps, totalUploadBps, applications, connections, primaryAdapter, authToken } = useNetworkStore();
   const [reason, setReason] = useState('Sudden network latency spike or packet loss event');
   const [isRecording, setIsRecording] = useState(false);
   const [lastReport, setLastReport] = useState<any | null>(null);
+  const [incidentList, setIncidentList] = useState<any[]>([]);
 
-  const fetchLastReport = async () => {
+  const getHeaders = (hasBody = false) => {
+    const h: Record<string, string> = {};
+    if (hasBody) h['Content-Type'] = 'application/json';
+    if (authToken) h['X-NetSpectre-Auth'] = authToken;
+    return h;
+  };
+
+  const fetchIncidentData = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/incident/report`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/incident/report`, {
+        headers: getHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data && data.incidentId) {
           setLastReport(data);
         }
       }
+
+      const listRes = await fetch(`http://127.0.0.1:${enginePort}/api/incident/list`, {
+        headers: getHeaders(),
+      });
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        if (Array.isArray(listData)) {
+          setIncidentList(listData);
+          if (!lastReport && listData.length > 0) {
+            setLastReport(listData[0]);
+          }
+        }
+      }
     } catch { }
   };
 
   useEffect(() => {
-    fetchLastReport();
-  }, [enginePort]);
+    fetchIncidentData();
+  }, [enginePort, authToken]);
 
   const handleCaptureSnapshot = async () => {
     setIsRecording(true);
     try {
       const res = await fetch(`http://127.0.0.1:${enginePort}/api/incident/snapshot`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(true),
         body: JSON.stringify({ reason }),
       });
       if (res.ok) {
         const data = await res.json();
         setLastReport(data);
+        fetchIncidentData();
       }
     } catch (err: any) {
       alert(`Failed to capture incident snapshot: ${err.message}`);
@@ -99,6 +123,44 @@ ${applications
     a.click();
   };
 
+  const downloadHtmlReport = () => {
+    if (!lastReport) return;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NETSPECTRE Incident Report - ${lastReport.incidentId}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #070b16; color: #e2e8f0; padding: 30px; }
+    h1 { color: #38bdf8; border-bottom: 2px solid #0284c7; padding-bottom: 10px; }
+    .badge { display: inline-block; padding: 4px 10px; background: #1e1b4b; color: #a855f7; border-radius: 6px; font-weight: bold; font-size: 12px; }
+    .card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #1e293b; font-size: 13px; }
+    th { color: #94a3b8; text-transform: uppercase; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>NETSPECTRE INCIDENT FORENSIC REPORT</h1>
+  <p><span class="badge">ID: ${lastReport.incidentId}</span> &bull; <strong>Recorded At:</strong> ${lastReport.recordedAt}</p>
+  <div class="card">
+    <h3>Trigger Reason</h3>
+    <p>${lastReport.reason}</p>
+  </div>
+  <div class="card">
+    <h3>System Status</h3>
+    <p>Inbound: <strong>${formatRate(totalDownloadBps)}</strong> &bull; Outbound: <strong>${formatRate(totalUploadBps)}</strong> &bull; Flows: <strong>${connections.length}</strong></p>
+  </div>
+</body>
+</html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = u;
+    a.download = `incident-report-${lastReport.incidentId || Date.now()}.html`;
+    a.click();
+  };
+
   return (
     <div className="w-full h-full overflow-y-auto bg-[#070b16] p-6 text-slate-200">
       {/* Header Banner */}
@@ -121,6 +183,13 @@ ${applications
 
         {lastReport && (
           <div className="flex items-center space-x-2">
+            <button
+              onClick={downloadHtmlReport}
+              className="px-3.5 py-2 rounded-xl bg-[#091024] hover:bg-[#0d1633] border border-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center space-x-2 transition"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Export HTML</span>
+            </button>
             <button
               onClick={downloadMarkdownReport}
               className="px-3.5 py-2 rounded-xl bg-[#091024] hover:bg-[#0d1633] border border-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center space-x-2 transition"
@@ -169,6 +238,31 @@ ${applications
           Captures complete socket table, process bandwidth consumption, adapter statuses, and active TCP states.
         </div>
       </div>
+
+      {/* Persistent Incidents History Selector (REQ-07 & REQ-16) */}
+      {incidentList.length > 0 && (
+        <div className="mt-6 p-4 rounded-xl bg-[#091024]/70 border border-slate-800">
+          <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center space-x-2">
+            <Clock className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Saved Incident Archive ({incidentList.length} recorded)</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {incidentList.map((inc, idx) => (
+              <button
+                key={idx}
+                onClick={() => setLastReport(inc)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition border ${
+                  lastReport?.incidentId === inc.incidentId
+                    ? 'bg-rose-950 text-rose-300 border-rose-500/60 font-bold'
+                    : 'bg-[#070b16] text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                {inc.incidentId} &bull; {inc.recordedAt?.split(' ')[1] || 'Past'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Last Incident Report Review */}
       {lastReport ? (

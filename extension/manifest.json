@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "NETSPECTRE — Browser Observability",
+  "version": "3.1.0",
+  "description": "Real-time HTTP/HTTPS request metadata observability bridge for NETSPECTRE Enterprise.",
+  "permissions": [
+    "webRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "NETSPECTRE Observability"
+  }
+}

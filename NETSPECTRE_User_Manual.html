@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>NETSPECTRE v3.0 Enterprise — Complete Operations & Troubleshooting Manual</title>
+<title>NETSPECTRE v3.1 Enterprise — Complete User & Operations Manual</title>
 <style>
   @page {
     size: A4;
@@ -164,17 +164,10 @@
     padding: 12px 14px;
   }
 
-  .feature-card.purple {
-    border-color: rgba(168, 85, 247, 0.3);
-  }
-
-  .feature-card.amber {
-    border-color: rgba(245, 158, 11, 0.3);
-  }
-
-  .feature-card.emerald {
-    border-color: rgba(16, 185, 129, 0.3);
-  }
+  .feature-card.purple { border-color: rgba(168, 85, 247, 0.3); }
+  .feature-card.amber { border-color: rgba(245, 158, 11, 0.3); }
+  .feature-card.emerald { border-color: rgba(16, 185, 129, 0.3); }
+  .feature-card.rose { border-color: rgba(244, 63, 94, 0.3); }
 
   .feature-card h4 {
     margin: 0 0 6px 0;
@@ -186,6 +179,7 @@
   .feature-card.purple h4 { color: #c084fc; }
   .feature-card.amber h4 { color: #fbbf24; }
   .feature-card.emerald h4 { color: #34d399; }
+  .feature-card.rose h4 { color: #fb7185; }
 
   .feature-card p {
     font-size: 8.5pt;
@@ -267,26 +261,26 @@
 
   <div style="margin: 40px 0;">
     <p style="font-size: 11pt; color: #94a3b8; max-width: 600px; line-height: 1.6;">
-      This document provides comprehensive operational specifications for NETSPECTRE V3.0 Enterprise, detailing the Tri-Persona Workspace system (Personal, Developer, Network Operations), native Win32 kernel telemetry architecture, live REST APIs, interactive WebGL neural flow visualization, and deep troubleshooting suites.
+      Comprehensive user manual and technical guide for NETSPECTRE V3.1 Enterprise. Covering the Tri-Persona Workspace system (Personal, Developer, Network Operations), native Win32 kernel telemetry, dual-mode packet capture, Chromium browser observability extension, persistent data quotas, and deep troubleshooting suites.
     </p>
   </div>
 
   <div class="cover-meta">
     <div>
       <div class="meta-label">Application Version</div>
-      <div class="meta-value">v3.0 ENTERPRISE</div>
+      <div class="meta-value">v3.1 ENTERPRISE</div>
     </div>
     <div>
       <div class="meta-label">Target Platform</div>
       <div class="meta-value">Windows 10 / 11 x64</div>
     </div>
     <div>
-      <div class="meta-label">Telemetry Engine</div>
-      <div class="meta-value">Win32 IP Helper</div>
+      <div class="meta-label">Capture Engines</div>
+      <div class="meta-value">Win32 IP Helper & Mode 2 Raw</div>
     </div>
     <div>
-      <div class="meta-label">Classification</div>
-      <div class="meta-value">Production Grade</div>
+      <div class="meta-label">Security Model</div>
+      <div class="meta-value">Localhost Token IPC</div>
     </div>
   </div>
 </div>
@@ -294,33 +288,33 @@
 <!-- PAGE 2: EXECUTIVE SUMMARY & TRI-PERSONA WORKSPACE ARCHITECTURE -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
     <span>SECTION 1: SYSTEM OVERVIEW & ARCHITECTURE</span>
   </div>
 
   <h2 class="section-title">1. Executive Overview & Persona Workspaces</h2>
 
   <p>
-    <strong>NETSPECTRE V3.0</strong> is an enterprise-grade Windows desktop application that bridges the gap between low-level system packet dynamics and user-facing actionable intelligence. Operating on a <strong>100% genuine Win32 telemetry foundation</strong>, NETSPECTRE queries the Windows IP Helper API (<code>iphlpapi.dll</code>), kernel process handles, and network adapter hardware counters.
+    <strong>NETSPECTRE V3.1</strong> is an enterprise-grade Windows desktop application that bridges the gap between low-level system packet dynamics and user-facing actionable intelligence. Operating on a <strong>100% genuine Win32 telemetry foundation</strong>, NETSPECTRE queries the Windows IP Helper API (<code>iphlpapi.dll</code>), kernel process handles, and network adapter hardware counters without simulation.
   </p>
 
   <h3 class="subsection-title">The Tri-Persona Workspace Architecture</h3>
   <p>
-    NETSPECTRE V3.0 eliminates interface clutter by tailoring tools and views to three distinct user personas via the top-bar workspace switcher:
+    NETSPECTRE V3.1 eliminates interface clutter by tailoring tools and views to three distinct user personas via the top-bar workspace switcher:
   </p>
 
   <div class="feature-grid">
     <div class="feature-card emerald">
       <h4>👤 Personal Workspace</h4>
       <p>
-        <strong>Everyday Windows Users & Remote Workers:</strong> 1-Click Network Health Doctor (0-100 Quality Index), plain-English explanations ("Why is my internet slow?"), bandwidth consumption meters, background process trackers, and 1-click Windows Defender Firewall application blocking.
+        <strong>Everyday Windows Users & Remote Workers:</strong> 1-Click Network Health Doctor (0-100 Quality Index), Explain My Network Assistant ("Why is my internet slow?"), persistent daily/monthly bandwidth quotas, background process trackers, and 1-click Windows Defender Firewall application blocking with emergency rollback.
       </p>
     </div>
 
     <div class="feature-card purple">
       <h4></> Developer Workspace</h4>
       <p>
-        <strong>Software & API Engineers:</strong> Interactive REST API Debugger with microsecond phase waterfalls (DNS $\rightarrow$ TCP $\rightarrow$ TLS $\rightarrow$ TTFB $\rightarrow$ Download), automated secret masking, cURL/HAR exports, Failure Root-Cause Analyzer, and multi-stage Environment Health Monitoring (DEV/SIT/UAT/PROD).
+        <strong>Software & API Engineers:</strong> Interactive REST API Debugger with microsecond phase waterfalls, Live Browser Observability via Chrome/Edge extension, HAR archive importer, Failure Root-Cause Analyzer, and multi-stage Environment Health Monitoring (DEV/SIT/UAT/PROD).
       </p>
     </div>
   </div>
@@ -328,36 +322,32 @@
   <div class="feature-card" style="margin-bottom: 14px;">
     <h4>🌐 Network Operations Workspace</h4>
     <p>
-      <strong>IT Administrators, Network Engineers & SOC Analysts:</strong> 2.5D Orthographic Neural Highway with 5 specialized visual modes, interactive node right-click context menus, deep Troubleshooting Workbench (Ping, Traceroute, DNS, Port Prober, TLS Inspector, Routing Table, Adapters), Incident Forensics Recorder, Multi-Device Monitor, and binary PCAP generation for Wireshark.
+      <strong>IT Administrators, Network Engineers & SOC Analysts:</strong> Dual-Mode Packet Capture (Mode 1 Basic Telemetry vs Mode 2 Deep Wire Sniffer with genuine PCAP export), 2.5D Orthographic Neural Highway, deep Troubleshooting Workbench (Ping, Traceroute, 7-record DNS, Path MTU, Port Prober, TLS Inspector, Routing Table), Incident Forensics Recorder with HTML export, Smart Alerts Engine with Windows Desktop Notifications, and Multi-Machine Monitor.
     </p>
   </div>
 
   <h3 class="subsection-title">Core Operating Principles</h3>
   <ul>
-    <li><strong>100% Genuine Win32 Telemetry:</strong> Every displayed socket, PID, protocol, and throughput metric reflects actual kernel data. No simulated or fictional connections.</li>
-    <li><strong>Cryptographic Truthfulness:</strong> HTTPS and QUIC flows are encrypted via TLS 1.3. NETSPECTRE measures connection metadata, flow rates, and endpoints accurately without claiming to decrypt private payload contents.</li>
-    <li><strong>100% Local-First Security:</strong> Zero cloud telemetry exfiltration. All measurements, logs, and captures remain local on the user's workstation.</li>
+    <li><strong>100% Genuine Win32 Telemetry:</strong> Every displayed socket, PID, protocol, and throughput metric reflects actual kernel data. No synthetic frames or simulated connections.</li>
+    <li><strong>Dual-Mode Honest Capture (REQ-01):</strong> Mode 1 provides connection flows. Mode 2 provides wire packet frames when running elevated as Administrator. PCAP export exports strictly captured packets.</li>
+    <li><strong>Local-First Enclave Security (REQ-15):</strong> All telemetry stays on your machine. The internal REST engine enforces cryptographically secure session token verification (<code>X-NetSpectre-Auth</code>) and CORS validation.</li>
   </ul>
 </div>
 
-<!-- PAGE 3: PERSONAL WORKSPACE — NETWORK DOCTOR -->
+<!-- PAGE 3: PERSONAL WORKSPACE — NETWORK DOCTOR & ASSISTANT -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
     <span>SECTION 2: PERSONAL WORKSPACE</span>
   </div>
 
-  <h2 class="section-title">2. Personal Workspace — Network Doctor</h2>
+  <h2 class="section-title">2. Personal Workspace — Doctor & Assistant</h2>
 
   <p>
-    The <strong>Network Doctor</strong> (<code>network-doctor</code>) provides a one-click automated health checkup of your workstation's complete network path. It benchmarks local router reachability, public internet backbone latency, DNS resolution speed, and physical Wi-Fi signal quality.
+    The <strong>Network Doctor</strong> (<code>network-doctor</code>) provides an automated health checkup of your workstation's complete network path, evaluating local router reachability, public internet backbone latency, DNS resolution speed, and physical Wi-Fi signal quality.
   </p>
 
   <h3 class="subsection-title">Health Score & Quality Index (0–100)</h3>
-  <p>
-    The Network Doctor computes a holistic 0–100 score updated dynamically:
-  </p>
-
   <table class="data-table">
     <thead>
       <tr>
@@ -395,445 +385,298 @@
     </tbody>
   </table>
 
-  <h3 class="subsection-title">The Four Pillars of Diagnostic Health</h3>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <h4>1. Local Router / Default Gateway</h4>
-      <p>Probes the physical gateway IP (e.g., <code>192.168.1.1</code> or <code>10.70.107.182</code>). Detects router freezes, physical cable disconnection, or local link drops.</p>
-    </div>
-    <div class="feature-card">
-      <h4>2. Global Internet Backbone</h4>
-      <p>Measures ICMP round-trip latency against Tier-1 anycast backbones (<code>1.1.1.1</code> and <code>8.8.8.8</code>) to evaluate ISP upstream health.</p>
-    </div>
-    <div class="feature-card">
-      <h4>3. DNS Name Resolution</h4>
-      <p>Measures domain lookup duration against <code>cloudflare.com</code> to verify fast domain-to-IP translation.</p>
-    </div>
-    <div class="feature-card">
-      <h4>4. Physical Link & Wi-Fi Quality</h4>
-      <p>Extracts signal percentage, SSID, and 802.11 radio protocol via native <code>netsh wlan show interfaces</code>.</p>
-    </div>
-  </div>
-
-  <div class="info-callout">
-    <strong>Actionable Findings:</strong> Each diagnostic check includes plain-English explanations and 1-click remediation buttons that launch the Troubleshooting Workbench with the failing target pre-filled.
-  </div>
+  <h3 class="subsection-title">Explain My Network Assistant (REQ-08)</h3>
+  <p>
+    Integrated into the Network Doctor is the <strong>Explain My Network</strong> deterministic intelligence assistant. Users can ask questions in plain English or select from quick diagnostic prompts:
+  </p>
+  <ul>
+    <li><em>"Why is my internet slow?"</em> &mdash; Pinpoints gateway congestion, high ISP backbone latency, or heavy background consumers.</li>
+    <li><em>"Which applications consume my bandwidth?"</em> &mdash; Lists top processes moving data with exact byte counts.</li>
+    <li><em>"Where is my data going?"</em> &mdash; Identifies remote countries and ASNs receiving outbound traffic.</li>
+    <li><em>"Is DNS resolving correctly?"</em> &mdash; Diagnoses NXDOMAIN or slow DNS response times.</li>
+    <li><em>"Is a firewall blocking my connections?"</em> &mdash; Checks active block rules and connection rejection rates.</li>
+  </ul>
+  <p>
+    Every diagnosis delivers verified **Telemetry Evidence**, an objective confidence rating, and concrete **Remediation Steps**.
+  </p>
 </div>
 
 <!-- PAGE 4: PERSONAL WORKSPACE — USAGE & FIREWALL -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
     <span>SECTION 3: USAGE & FIREWALL</span>
   </div>
 
-  <h2 class="section-title">3. Internet Usage, Privacy & Firewall Controls</h2>
+  <h2 class="section-title">3. Persistent Usage Quotas & Firewall Controls</h2>
 
-  <h3 class="subsection-title">Internet Usage & Privacy Monitor</h3>
+  <h3 class="subsection-title">Persistent Internet Usage & Quota Budgeting (REQ-03, REQ-16)</h3>
   <p>
-    The <strong>Internet Usage Monitor</strong> (<code>internet-usage</code>) provides full transparency into per-application bandwidth consumption and background privacy exposures:
+    The <strong>Internet Usage Monitor</strong> (<code>internet-usage</code>) tracks per-process bandwidth consumption with persistent local transactional storage in <code>%APPDATA%\NetSpectre\data\usage.json</code>:
   </p>
   <ul>
-    <li><strong>Bandwidth Share Progress Bars:</strong> Visual breakdown of each application's cumulative byte volume as a percentage of total session data.</li>
-    <li><strong>Background Data Consumer Identification:</strong> Flags background applications moving significant traffic without open UI windows.</li>
-    <li><strong>Tracker & Telemetry Audit:</strong> Scans active socket domains for known analytics and advertising trackers (e.g. telemetry endpoints, metrics, doubleclick), allowing immediate review.</li>
+    <li><strong>Daily & Monthly Quotas:</strong> Configurable data caps (e.g., 5 GB/day, 50 GB/month) with visual progress bars and warning alerts.</li>
+    <li><strong>Persistent Daily Session Archive:</strong> Retains cumulative bandwidth metrics per application across system reboots.</li>
+    <li><strong>Stealth Background Consumer Detection:</strong> Identifies silent background processes moving high-volume data without open windows.</li>
+    <li><strong>Telemetry & Tracker Audit:</strong> Detects connections communicating with ad, analytics, and telemetry endpoints.</li>
   </ul>
 
-  <h3 class="subsection-title">Application Internet Firewall Controls</h3>
+  <h3 class="subsection-title">Application Internet Firewall Controls (REQ-04)</h3>
   <p>
-    The <strong>Firewall Manager</strong> (<code>firewall</code>) allows users to restrict outbound network access for any Windows executable with a single click:
+    The <strong>Firewall Manager</strong> (<code>firewall</code>) allows users to restrict outbound network access for any Windows executable with a single click using native Windows Defender Firewall rules:
   </p>
 
   <div class="code-block">netsh advfirewall firewall add rule name="NETSPECTRE Block - [App]" dir=out action=block program="[Path]" enable=yes</div>
 
   <div class="feature-grid">
     <div class="feature-card emerald">
-      <h4>Native Defender Integration</h4>
-      <p>Rules are written directly to the Windows Defender Firewall engine. Rules persist even when NETSPECTRE is closed.</p>
+      <h4>Administrator Elevation Check</h4>
+      <p>Automatically checks elevation via <code>WindowsBuiltInRole.Administrator</code>. If non-elevated, displays a clear read-only banner preventing silent command failures.</p>
     </div>
-    <div class="feature-card amber">
-      <h4>Security Audit Log</h4>
-      <p>Maintains an in-memory chronological record of every block and unblock action with timestamps and process paths.</p>
+    <div class="feature-card rose">
+      <h4>Emergency Rollback All Rules</h4>
+      <p>1-Click safe rollback instantly removes all NETSPECTRE-managed firewall block rules, immediately restoring outbound internet connectivity if needed.</p>
     </div>
   </div>
-
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Action</th>
-        <th>Target Process</th>
-        <th>Firewall Rule Created</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>BLOCK</td>
-        <td><code>telemetry_daemon.exe</code></td>
-        <td><code>NETSPECTRE Block - telemetry_daemon.exe</code></td>
-        <td>Outbound Traffic Blocked</td>
-      </tr>
-      <tr>
-        <td>BLOCK</td>
-        <td><code>untrusted_agent.exe</code></td>
-        <td><code>NETSPECTRE Block - untrusted_agent.exe</code></td>
-        <td>Outbound Traffic Blocked</td>
-      </tr>
-      <tr>
-        <td>UNBLOCK</td>
-        <td><code>chrome.exe</code></td>
-        <td><code>[Deleted from Windows Defender Rules]</code></td>
-        <td>Outbound Traffic Restored</td>
-      </tr>
-    </tbody>
-  </table>
 </div>
 
-<!-- PAGE 5: DEVELOPER WORKSPACE — API DEBUGGER -->
+<!-- PAGE 5: DEVELOPER WORKSPACE — API INSPECTOR & BROWSER OBSERVABILITY -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
     <span>SECTION 4: DEVELOPER WORKSPACE</span>
   </div>
 
-  <h2 class="section-title">4. Developer Workspace — API Traffic Debugger</h2>
+  <h2 class="section-title">4. API Inspector & Browser Observability</h2>
 
+  <h3 class="subsection-title">Live Browser Observability Extension (REQ-02)</h3>
   <p>
-    The <strong>API Traffic Debugger</strong> (<code>api-debugger</code>) empowers software developers to execute HTTP/HTTPS requests with microsecond phase waterfall timing, response body inspection, and automated credential protection.
+    NETSPECTRE includes a built-in Chromium extension in <code>extension/</code> for Google Chrome, Microsoft Edge, and Brave:
   </p>
-
-  <h3 class="subsection-title">Microsecond Phase Waterfall Breakdown</h3>
-  <p>
-    Every executed request is profiled across 5 discrete timing phases:
-  </p>
-
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Phase</th>
-        <th>Color</th>
-        <th>What It Measures</th>
-        <th>Common Bottlenecks</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>DNS Lookup</td>
-        <td>Blue</td>
-        <td>Time required to resolve domain name to IP address.</td>
-        <td>Slow local resolver, DNS server congestion.</td>
-      </tr>
-      <tr>
-        <td>TCP Handshake</td>
-        <td>Emerald</td>
-        <td>Time for SYN, SYN-ACK, ACK 3-way connection setup.</td>
-        <td>Physical distance, high routing latency.</td>
-      </tr>
-      <tr>
-        <td>TLS Handshake</td>
-        <td>Purple</td>
-        <td>SSL/TLS certificate negotiation and cipher exchange.</td>
-        <td>Slow crypto negotiations, deep certificate chains.</td>
-      </tr>
-      <tr>
-        <td>TTFB (Wait)</td>
-        <td>Amber</td>
-        <td>Time To First Byte while server computes response.</td>
-        <td>Slow database queries, heavy backend microservices.</td>
-      </tr>
-      <tr>
-        <td>Content Download</td>
-        <td>Cyan</td>
-        <td>Time to transfer the response payload stream.</td>
-        <td>Large JSON payloads, low client downlink bandwidth.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3 class="subsection-title">Developer Tooling Integration</h3>
   <ul>
-    <li><strong>1-Click Copy as cURL:</strong> Generates ready-to-use cURL commands formatted with headers, HTTP method, and JSON body for terminal replay.</li>
-    <li><strong>Export HAR (HTTP Archive):</strong> Generates standard HAR 1.2 files compatible with Chrome DevTools, Postman, and Insomnia.</li>
-    <li><strong>Automated Secret Masking:</strong> Sensitive authorization headers (`Bearer`, `Authorization`, `Cookie`, API keys) are sanitized automatically in stored execution history.</li>
+    <li><strong>Installation:</strong> Open <code>chrome://extensions</code>, enable Developer Mode, and click <em>"Load unpacked"</em> pointing to the <code>extension/</code> folder.</li>
+    <li><strong>Automatic Secret Redaction:</strong> Automatically masks <code>Authorization</code>, <code>Bearer</code>, <code>Cookie</code>, and API key tokens before telemetry leaves the browser.</li>
+    <li><strong>Live Feed:</strong> Forwards request URLs, HTTP methods, status codes, duration, and payload sizes directly into the NETSPECTRE API Inspector.</li>
   </ul>
+
+  <h3 class="subsection-title">Direct API Request Executor & Phase Waterfall</h3>
+  <p>
+    Execute GET, POST, PUT, DELETE, PATCH, and HEAD requests with headers and JSON payload editors. Every request is broken down into microsecond phases:
+  </p>
+  <div class="code-block">Total Duration = DNS Lookup + TCP Connect + TLS Handshake + TTFB + Content Download</div>
+
+  <h3 class="subsection-title">HAR Archive Importer</h3>
+  <p>
+    Import any <code>.har</code> (HTTP Archive) export from Chrome DevTools, Postman, or Charles Proxy to inspect external request cascades, response codes, and timings offline.
+  </p>
 </div>
 
-<!-- PAGE 6: DEVELOPER WORKSPACE — FAILURE ANALYZER & ENV MONITOR -->
+<!-- PAGE 6: DEVELOPER WORKSPACE — ENVIRONMENT MONITOR -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
-    <span>SECTION 5: DEVELOPER WORKSPACE</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
+    <span>SECTION 5: ENVIRONMENT MONITOR</span>
   </div>
 
-  <h2 class="section-title">5. API Failure Analyzer & Environment Monitor</h2>
+  <h2 class="section-title">5. Multi-Tier Environment Health Monitor</h2>
 
-  <h3 class="subsection-title">API Failure Root-Cause Analyzer</h3>
   <p>
-    The <strong>API Failure Analyzer</strong> (<code>api-failure-analyzer</code>) provides deterministic automated diagnosis for failed requests:
+    The <strong>Environment Health Monitor</strong> (<code>env-monitor</code>) provides continuous reachability and SSL certificate health telemetry across software deployment pipelines:
   </p>
 
   <div class="feature-grid">
     <div class="feature-card">
-      <h4>DNS_RESOLUTION_FAILURE (NXDOMAIN)</h4>
-      <p>Domain name does not exist or local resolver failed. Verified via Workbench DNS tool. Suggests <code>ipconfig /flushdns</code>.</p>
+      <h4>DEV (Development)</h4>
+      <p>Local microservices and containerized backends (e.g., <code>127.0.0.1:48123</code> or local Docker containers).</p>
     </div>
-    <div class="feature-card">
-      <h4>TCP_CONNECTION_REFUSED (ECONNREFUSED)</h4>
-      <p>Target IP is alive but no service is listening on port. Suggests checking port binding and container status.</p>
+    <div class="feature-card amber">
+      <h4>SIT (System Integration)</h4>
+      <p>Internal integration testing endpoints validating API contract compatibility.</p>
     </div>
-    <div class="feature-card">
-      <h4>TLS_CERTIFICATE_EXPIRED</h4>
-      <p>Server certificate expired or hostname mismatch. Verified via Workbench TLS Certificate Inspector.</p>
+    <div class="feature-card purple">
+      <h4>UAT (User Acceptance / Staging)</h4>
+      <p>Pre-production environments matching production configuration.</p>
     </div>
-    <div class="feature-card">
-      <h4>HTTP 502 / 504 GATEWAY TIMEOUT</h4>
-      <p>Reverse proxy (Nginx, ALB, Cloudflare) timed out waiting for backend microservice. Suggests inspecting container OOM logs.</p>
+    <div class="feature-card rose">
+      <h4>PROD (Production)</h4>
+      <p>Live customer-facing microservices and edge gateways.</p>
     </div>
   </div>
 
-  <h3 class="subsection-title">Multi-Stage Environment Health Monitor</h3>
-  <p>
-    The <strong>Environment Monitor</strong> (<code>env-monitor</code>) tracks application endpoints across DEV, SIT, UAT, and PROD:
-  </p>
-
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Tier</th>
-        <th>Service Name</th>
-        <th>Target URL</th>
-        <th>Latency</th>
-        <th>SSL Expiry</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>PROD</td>
-        <td>Production API Gateway</td>
-        <td><code>api.github.com</code></td>
-        <td>24 ms</td>
-        <td>184 days remaining</td>
-        <td>ONLINE</td>
-      </tr>
-      <tr>
-        <td>UAT</td>
-        <td>Staging Cloudflare Edge</td>
-        <td><code>cloudflare.com</code></td>
-        <td>16 ms</td>
-        <td>98 days remaining</td>
-        <td>ONLINE</td>
-      </tr>
-      <tr>
-        <td>SIT</td>
-        <td>Integration Testing Hub</td>
-        <td><code>httpbin.org</code></td>
-        <td>62 ms</td>
-        <td>240 days remaining</td>
-        <td>ONLINE</td>
-      </tr>
-      <tr>
-        <td>DEV</td>
-        <td>Local Development Host</td>
-        <td><code>127.0.0.1:48123</code></td>
-        <td>1 ms</td>
-        <td>365 days remaining</td>
-        <td>ONLINE</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- PAGE 7: OPERATIONS WORKSPACE — 2.5D NEURAL HIGHWAY -->
-<div class="manual-page">
-  <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
-    <span>SECTION 6: NETWORK OPERATIONS</span>
-  </div>
-
-  <h2 class="section-title">6. Operations Workspace — 2.5D Neural Highway</h2>
-
-  <p>
-    The <strong>Neural Highway Universe</strong> (<code>command-center</code>) transforms network traffic into an interactive 2.5D orthographic graph.
-  </p>
-
-  <h3 class="subsection-title">The 5-Column Information Architecture</h3>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Column</th>
-        <th>Layer Name</th>
-        <th>Entities Displayed</th>
-        <th>Visual Attributes</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Column 1</td>
-        <td>LOCAL SYSTEM</td>
-        <td>Local PC, Active Network Interface (Wi-Fi, Ethernet).</td>
-        <td>Cyan pulsing ring with live uplink/downlink gauges.</td>
-      </tr>
-      <tr>
-        <td>Column 2</td>
-        <td>APPLICATIONS</td>
-        <td>Detected running Win32 processes (Chrome, Edge, Teams, VS Code, etc.).</td>
-        <td>Sized by active socket count and transfer volume.</td>
-      </tr>
-      <tr>
-        <td>Column 3</td>
-        <td>PROTOCOLS & HUBS</td>
-        <td>Transport protocols (TCP, UDP) and port aggregators.</td>
-        <td>Cyan disc clusters showing active socket bindings.</td>
-      </tr>
-      <tr>
-        <td>Column 4</td>
-        <td>DESTINATIONS</td>
-        <td>Remote IPs, domain names, country flags, organizations.</td>
-        <td>Pulsing destination discs with throughput counters.</td>
-      </tr>
-      <tr>
-        <td>Column 5</td>
-        <td>SERVICE / ASN</td>
-        <td>Autonomous System Numbers (Cloudflare, AWS, Google, Microsoft).</td>
-        <td>Purple routing cluster nodes showing BGP networks.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3 class="subsection-title">Interactive Right-Click Context Menu</h3>
-  <p>
-    Right-clicking any node on the 2.5D WebGL canvas opens an instant context menu:
-  </p>
+  <h3 class="subsection-title">Persistent Endpoint CRUD (REQ-05)</h3>
   <ul>
-    <li><strong>Destination Nodes:</strong> 1-click jump to Workbench Ping, Traceroute, DNS Inspector, Port Prober, or TLS Inspector with target pre-filled.</li>
-    <li><strong>Application Nodes:</strong> 1-click "Block in Windows Firewall" or "Inspect in Application Explorer".</li>
-    <li><strong>Universal:</strong> "Diagnose with Network Doctor" for automated health verification.</li>
+    <li><strong>Add Custom Endpoints:</strong> Specify display name, target host/URL, and environment tier.</li>
+    <li><strong>Persistent Storage:</strong> Endpoints are persisted in <code>%APPDATA%\NetSpectre\data\environments.json</code> across restarts.</li>
+    <li><strong>SSL Expiry Countdown:</strong> Continuously monitors TLS certificate remaining validity days to prevent unexpected production outages.</li>
+    <li><strong>1-Click Workbench Integration:</strong> Launch TLS Certificate Inspection or Ping probes directly from any endpoint card.</li>
   </ul>
 </div>
 
-<!-- PAGE 8: OPERATIONS WORKSPACE — TROUBLESHOOTING WORKBENCH -->
+<!-- PAGE 7: OPERATIONS WORKSPACE — PACKET EXPLORER -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
-    <span>SECTION 7: NETWORK OPERATIONS</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
+    <span>SECTION 6: PACKET EXPLORER</span>
   </div>
 
-  <h2 class="section-title">7. Network Troubleshooting Workbench</h2>
+  <h2 class="section-title">6. Dual-Mode Packet Capture & PCAP</h2>
 
+  <h3 class="subsection-title">Mode 1 vs Mode 2 Capture Semantics (REQ-01)</h3>
   <p>
-    The <strong>Network Workbench</strong> (<code>workbench</code>) provides a unified interface for 7 essential network troubleshooting utilities:
+    NETSPECTRE provides strict cryptographic truthfulness regarding packet capture capabilities:
   </p>
 
-  <div class="feature-grid">
-    <div class="feature-card">
-      <h4>1. Ping Test Tool</h4>
-      <p>Real Windows ICMP pings. Measures sequence numbers, RTT (ms), TTL, packet loss percentage, jitter, and min/avg/max latencies.</p>
-    </div>
-    <div class="feature-card">
-      <h4>2. Traceroute Tool</h4>
-      <p>Hop-by-hop ICMP TTL progression from 1 to 20 hops. Resolves intermediate router IPs and reverse hostnames with latency breakdown.</p>
-    </div>
-    <div class="feature-card">
-      <h4>3. DNS Inspector</h4>
-      <p>Queries A, AAAA, and CNAME records with sub-millisecond query timers using system and configured DNS resolvers.</p>
-    </div>
-    <div class="feature-card">
-      <h4>4. TCP Port Prober</h4>
-      <p>Tests 3-way handshake connectivity to ports (80, 443, 22, 3306, 5432, 8080) and reads service greeting banners.</p>
-    </div>
-    <div class="feature-card">
-      <h4>5. TLS Certificate Inspector</h4>
-      <p>Completes client TLS handshake with SNI. Extracts Subject, Issuer, Validity Dates, Days Until Expiry, Cipher Suite, and SANs.</p>
-    </div>
-    <div class="feature-card">
-      <h4>6. System Routing Table</h4>
-      <p>Parses the Windows IPv4 Routing Table (Destination, Netmask, Gateway, Interface, Metric) for diagnosing routing loops.</p>
-    </div>
-  </div>
-
-  <div class="feature-card emerald">
-    <h4>7. Physical & Virtual Adapter Inspector</h4>
-    <p>Displays all detected adapters (Ethernet, Wi-Fi, VPN), operational status, MAC address, link speed (Mbps), MTU, and IP assignments.</p>
-  </div>
-</div>
-
-<!-- PAGE 9: OPERATIONS WORKSPACE — FORENSICS & INCIDENT RECORDER -->
-<div class="manual-page">
-  <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
-    <span>SECTION 8: NETWORK OPERATIONS</span>
-  </div>
-
-  <h2 class="section-title">8. Incident Recorder, Infrastructure & PCAP</h2>
-
-  <h3 class="subsection-title">Incident Recorder & Forensic Snapshot Audit</h3>
-  <p>
-    When a network outage, VPN drop, or latency burst occurs, click <strong>"CAPTURE INCIDENT SNAPSHOT"</strong> in the Incident Recorder (<code>incident-recorder</code>):
-  </p>
-  <ul>
-    <li>Freezes all active TCP/UDP connections, process bandwidth consumption, and interface counters at that microsecond.</li>
-    <li>Generates an exportable post-mortem report in **Markdown** or **JSON** format for team retrospectives and ticket attachments.</li>
-  </ul>
-
-  <h3 class="subsection-title">Infrastructure & Multi-Device Monitoring</h3>
-  <p>
-    The <strong>Infrastructure Monitor</strong> (<code>devices</code>) continuously polls critical nodes:
-  </p>
   <table class="data-table">
     <thead>
       <tr>
-        <th>Device</th>
-        <th>Target IP / Host</th>
-        <th>Role</th>
-        <th>Status</th>
+        <th>Feature</th>
+        <th>Mode 1: Basic Telemetry</th>
+        <th>Mode 2: Advanced Packet Capture</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Default Local Gateway</td>
-        <td><code>192.168.1.1</code> / <code>10.70.107.182</code></td>
-        <td>Local Router</td>
-        <td>ONLINE (0 ms)</td>
+        <td>Elevation</td>
+        <td>Standard User (Non-Elevated)</td>
+        <td>Administrator Elevation Required</td>
       </tr>
       <tr>
-        <td>Cloudflare Anycast DNS</td>
-        <td><code>1.1.1.1</code></td>
-        <td>Primary Resolver</td>
-        <td>ONLINE (15 ms)</td>
+        <td>Capture Engine</td>
+        <td>Win32 IP Helper (iphlpapi.dll)</td>
+        <td>Raw Socket Wire Sniffer (SIO_RCVALL / PktMon)</td>
       </tr>
       <tr>
-        <td>Google Public DNS</td>
-        <td><code>8.8.8.8</code></td>
-        <td>Secondary Resolver</td>
-        <td>ONLINE (16 ms)</td>
+        <td>Process Attribution</td>
+        <td>Exact Kernel PID & Image Path</td>
+        <td>Exact Socket Attribution</td>
       </tr>
       <tr>
-        <td>GitHub Global CDN</td>
-        <td><code>140.82.112.4</code></td>
-        <td>Git Infrastructure</td>
-        <td>ONLINE (24 ms)</td>
+        <td>Raw Wire Headers</td>
+        <td>Not available (socket metadata only)</td>
+        <td>Full Ethernet/IP/TCP/UDP Wire Frames</td>
       </tr>
       <tr>
-        <td>AWS Core Infrastructure</td>
-        <td><code>52.95.110.1</code></td>
-        <td>Cloud Services</td>
-        <td>ONLINE (28 ms)</td>
+        <td>PCAP Export</td>
+        <td>Disallowed (Prevents fake frames)</td>
+        <td>Genuine Binary PCAP for Wireshark</td>
       </tr>
     </tbody>
   </table>
 
-  <h3 class="subsection-title">Binary PCAP Generation</h3>
+  <h3 class="subsection-title">Genuine PCAP Export</h3>
   <p>
-    NETSPECTRE maintains a circular packet buffer and exports standard <strong>binary PCAP capture files</strong> (<code>netspectre-capture.pcap</code>) via <code>GET /api/pcap/export</code> for deep packet inspection in <strong>Wireshark</strong>.
+    When Mode 2 capture is active, clicking <strong>"Export Captured PCAP"</strong> produces a standard binary PCAP file (<code>netspectre-capture.pcap</code>) containing exclusively captured wire frames for Wireshark inspection.
   </p>
 </div>
 
-<!-- PAGE 10: REST APIS & FAQ -->
+<!-- PAGE 8: OPERATIONS WORKSPACE — WORKBENCH -->
 <div class="manual-page">
   <div class="page-header">
-    <span class="doc-title">NETSPECTRE V3.0 ENTERPRISE</span>
-    <span>SECTION 9: REST APIS & OPERATIONS FAQ</span>
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
+    <span>SECTION 7: TROUBLESHOOTING WORKBENCH</span>
+  </div>
+
+  <h2 class="section-title">7. Troubleshooting Workbench (DNS & MTU)</h2>
+
+  <h3 class="subsection-title">Expanded DNS Inspector (7 Record Types) (REQ-06)</h3>
+  <p>
+    The DNS Inspector supports querying all standard DNS record types with lookup timing:
+  </p>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Record Type</th>
+        <th>Purpose</th>
+        <th>Example Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>A</code></td>
+        <td>IPv4 Host Address</td>
+        <td><code>142.250.190.46</code></td>
+      </tr>
+      <tr>
+        <td><code>AAAA</code></td>
+        <td>IPv6 Host Address</td>
+        <td><code>2607:f8b0:4004:800::200e</code></td>
+      </tr>
+      <tr>
+        <td><code>CNAME</code></td>
+        <td>Canonical Alias Name</td>
+        <td><code>github.map.fastly.net</code></td>
+      </tr>
+      <tr>
+        <td><code>MX</code></td>
+        <td>Mail Exchange Server</td>
+        <td><code>aspmx.l.google.com (Priority 10)</code></td>
+      </tr>
+      <tr>
+        <td><code>TXT</code></td>
+        <td>SPF, DKIM & Domain Verification</td>
+        <td><code>v=spf1 include:_spf.google.com ~all</code></td>
+      </tr>
+      <tr>
+        <td><code>NS</code></td>
+        <td>Authoritative Nameserver</td>
+        <td><code>ns1.cloudflare.com</code></td>
+      </tr>
+      <tr>
+        <td><code>SOA</code></td>
+        <td>Start of Authority & Zone Serial</td>
+        <td><code>ns-cloud-a1.googledomains.com</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="subsection-title">Path MTU Discovery (REQ-06)</h3>
+  <p>
+    The <strong>Path MTU Discovery</strong> tool probes upstream packet size limits using Don't Fragment (<code>DF=1</code>) ICMP echo probes:
+  </p>
+  <ul>
+    <li>Identifies MTU bottlenecks caused by VPN tunnels, PPPoE encapsulation, or cellular uplinks.</li>
+    <li>Probes across sizes 1200 B to 1500 B to discover the exact maximum transmission unit without fragmentation.</li>
+  </ul>
+</div>
+
+<!-- PAGE 9: OPERATIONS WORKSPACE — FORENSICS & ALERTS -->
+<div class="manual-page">
+  <div class="page-header">
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
+    <span>SECTION 8: FORENSICS & ALERTS</span>
+  </div>
+
+  <h2 class="section-title">8. Incident Forensics & Smart Alerts</h2>
+
+  <h3 class="subsection-title">Incident Forensics Recorder (REQ-07, REQ-11)</h3>
+  <p>
+    Freeze real-time network state during an outage or latency burst to generate complete post-mortem evidence:
+  </p>
+  <ul>
+    <li><strong>Sliding Telemetry Buffer:</strong> Captures socket states, process consumption, and link health at the moment of trigger.</li>
+    <li><strong>Persistent Incident Archive:</strong> Saves all recorded incidents in <code>%APPDATA%\NetSpectre\data\incidents.json</code> for historical comparison.</li>
+    <li><strong>Multi-Format Exports:</strong> Export incident reports as <strong>Standalone HTML</strong>, <strong>Markdown</strong>, or <strong>JSON</strong>.</li>
+  </ul>
+
+  <h3 class="subsection-title">Smart Alerts Engine & Windows Notifications (REQ-09)</h3>
+  <ul>
+    <li><strong>Configurable Thresholds:</strong> Set custom latency spike limits (50–500 ms) and outbound burst limits (1–50 MB/s).</li>
+    <li><strong>Windows Desktop Notifications:</strong> Dispatches native notifications via the Electron bridge when anomalies are detected.</li>
+    <li><strong>Persistent Alert History:</strong> Stored in <code>%APPDATA%\NetSpectre\data\alerts.json</code> with individual acknowledgement buttons.</li>
+  </ul>
+
+  <h3 class="subsection-title">Multi-Machine Endpoint Monitor (REQ-12)</h3>
+  <p>
+    Centralized monitoring for local default gateways, DNS clusters, and enrolled remote Windows endpoints:
+  </p>
+  <div class="code-block">NetSpectreEngine.exe --port 48123 --token &lt;SHARED_SECRET&gt;</div>
+</div>
+
+<!-- PAGE 10: REST APIS & OPERATIONS FAQ -->
+<div class="manual-page">
+  <div class="page-header">
+    <span class="doc-title">NETSPECTRE V3.1 ENTERPRISE</span>
+    <span>SECTION 9: REST APIS & FAQ</span>
   </div>
 
   <h2 class="section-title">9. REST API Reference & Operations FAQ</h2>
@@ -849,66 +692,66 @@
     <tbody>
       <tr>
         <td><code>GET</code></td>
+        <td><code>/api/status</code></td>
+        <td>Engine health and version disclosure.</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
         <td><code>/api/telemetry</code></td>
-        <td>Full JSON snapshot (connections, processes, rates, events).</td>
+        <td>Full kernel telemetry snapshot (requires <code>X-NetSpectre-Auth</code>).</td>
       </tr>
       <tr>
         <td><code>GET</code></td>
-        <td><code>/api/diagnose/doctor</code></td>
-        <td>Network Doctor diagnostic results (Gateway, Internet, DNS, Wi-Fi, Score).</td>
-      </tr>
-      <tr>
-        <td><code>GET</code></td>
-        <td><code>/api/workbench/ping?target=...&count=4</code></td>
-        <td>ICMP Ping results with min/avg/max/jitter statistics.</td>
-      </tr>
-      <tr>
-        <td><code>GET</code></td>
-        <td><code>/api/workbench/traceroute?target=...</code></td>
-        <td>ICMP TTL-increment traceroute with reverse hostnames.</td>
-      </tr>
-      <tr>
-        <td><code>GET</code></td>
-        <td><code>/api/workbench/dns?host=...&type=A</code></td>
-        <td>DNS query records (A, AAAA, CNAME) and duration.</td>
-      </tr>
-      <tr>
-        <td><code>GET</code></td>
-        <td><code>/api/workbench/port?host=...&port=...</code></td>
-        <td>TCP 3-way handshake connect latency and service banner.</td>
-      </tr>
-      <tr>
-        <td><code>GET</code></td>
-        <td><code>/api/workbench/tls?host=...&port=443</code></td>
-        <td>TLS certificate validity, expiry days, SANs, and cipher suite.</td>
+        <td><code>/api/capture/status</code></td>
+        <td>Mode 1 vs Mode 2 status and packet counters.</td>
       </tr>
       <tr>
         <td><code>POST</code></td>
-        <td><code>/api/firewall/block</code></td>
-        <td>Adds outbound executable block rule via <code>netsh advfirewall</code>.</td>
+        <td><code>/api/capture/start</code></td>
+        <td>Starts Mode 2 raw socket wire capture (Administrator only).</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/pcap/export</code></td>
+        <td>Exports binary PCAP stream of captured wire frames.</td>
       </tr>
       <tr>
         <td><code>POST</code></td>
-        <td><code>/api/api-inspector/execute</code></td>
-        <td>Executes HTTP/HTTPS request with phase waterfall metrics.</td>
+        <td><code>/api/browser-obs/ingest</code></td>
+        <td>Ingests HTTP request telemetry from Chromium extension.</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/usage/history</code></td>
+        <td>Persistent daily and monthly bandwidth usage and quotas.</td>
       </tr>
       <tr>
         <td><code>POST</code></td>
-        <td><code>/api/incident/snapshot</code></td>
-        <td>Freezes current state and compiles forensic incident report.</td>
+        <td><code>/api/usage/limits</code></td>
+        <td>Sets daily and monthly quota caps in MB.</td>
+      </tr>
+      <tr>
+        <td><code>POST</code></td>
+        <td><code>/api/diagnose/explain</code></td>
+        <td>Deterministic natural language network diagnostic engine.</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/workbench/mtu</code></td>
+        <td>Discovers Path MTU using Don't Fragment ICMP probes.</td>
       </tr>
     </tbody>
   </table>
 
-  <h3 class="subsection-title">Frequently Asked Questions</h3>
-  <p><strong>Q: Why does the Network Doctor report 0ms gateway latency?</strong><br>
-  A: On fast gigabit Ethernet or local router switches, round-trip echo latency is sub-millisecond, reported as 0ms.</p>
+  <h3 class="subsection-title">Operations FAQ</h3>
+  <p><strong>Q: Why does Mode 2 Packet Capture require Administrator elevation?</strong><br>
+  A: Windows security architecture restricts raw socket binding (<code>SIO_RCVALL</code>) strictly to processes running with Administrator privileges to protect system integrity.</p>
 
-  <p><strong>Q: Do firewall rules stay active after closing NETSPECTRE?</strong><br>
-  A: Yes. Rules are written directly to Windows Defender Firewall. They can be unblocked anytime from NETSPECTRE or Windows Control Panel.</p>
+  <p><strong>Q: Are browser requests encrypted when captured by the extension?</strong><br>
+  A: The Chromium extension observes request metadata before transport encryption, allowing inspection of URLs, HTTP methods, headers, and status codes while masking credentials.</p>
 
-  <p><strong>Q: Can NETSPECTRE decrypt HTTPS bank traffic?</strong><br>
-  A: No. NETSPECTRE preserves cryptographic integrity. Modern TLS 1.3 encryption protects payloads; NETSPECTRE monitors socket flow metrics, metadata, and endpoints truthfully.</p>
+  <p><strong>Q: Where are my usage history and incident recordings stored?</strong><br>
+  A: All persistent data is stored locally in <code>%APPDATA%\NetSpectre\data\</code> in transactional JSON files. No data is ever transmitted to external servers.</p>
 </div>
 
 </body>

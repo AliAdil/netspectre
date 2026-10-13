@@ -40,7 +40,18 @@ export const App: React.FC = () => {
     setConnected,
     isPaused,
     isHistoryMode,
+    authToken,
+    setAuthToken,
   } = useNetworkStore();
+
+  // Retrieve IPC session token from Electron preload on startup
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).netspectreAPI?.getSessionToken) {
+      (window as any).netspectreAPI.getSessionToken().then((tok: string) => {
+        if (tok) setAuthToken(tok);
+      });
+    }
+  }, [setAuthToken]);
 
   // Telemetry Polling Effect
   useEffect(() => {
@@ -50,7 +61,12 @@ export const App: React.FC = () => {
       if (isPaused || isHistoryMode) return;
 
       try {
-        const res = await fetch(`http://127.0.0.1:${enginePort}/api/telemetry`);
+        const headers: Record<string, string> = {};
+        if (authToken) {
+          headers['X-NetSpectre-Auth'] = authToken;
+        }
+
+        const res = await fetch(`http://127.0.0.1:${enginePort}/api/telemetry`, { headers });
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {
@@ -75,7 +91,7 @@ export const App: React.FC = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [enginePort, isPaused, isHistoryMode, updateTelemetry, setConnected]);
+  }, [enginePort, isPaused, isHistoryMode, updateTelemetry, setConnected, authToken]);
 
   return (
     <div className="flex flex-col w-screen h-screen overflow-hidden bg-[#070a13] text-slate-100 select-none">

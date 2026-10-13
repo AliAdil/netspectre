@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNetworkStore } from '../../store/networkStore';
 import {
   formatBytes,
@@ -14,6 +14,10 @@ import {
   Server,
   Cpu,
   Info,
+  Bell,
+  BellOff,
+  Sliders,
+  CheckCircle,
 } from 'lucide-react';
 
 export const SecurityScreen: React.FC = () => {
@@ -21,7 +25,52 @@ export const SecurityScreen: React.FC = () => {
     connections,
     events,
     setSelectedConnection,
+    enginePort,
+    authToken,
   } = useNetworkStore();
+
+  const [engineAlerts, setEngineAlerts] = useState<any[]>([]);
+  const [enableDesktopNotifs, setEnableDesktopNotifs] = useState(true);
+  const [latencyThresholdMs, setLatencyThresholdMs] = useState(150);
+  const [burstThresholdMb, setBurstThresholdMb] = useState(5);
+
+  const getHeaders = (hasBody = false) => {
+    const h: Record<string, string> = {};
+    if (hasBody) h['Content-Type'] = 'application/json';
+    if (authToken) h['X-NetSpectre-Auth'] = authToken;
+    return h;
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/alerts/history`, {
+        headers: getHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.alerts)) {
+          setEngineAlerts(data.alerts);
+        }
+      }
+    } catch { }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 4000);
+    return () => clearInterval(interval);
+  }, [enginePort, authToken]);
+
+  const handleAcknowledge = async (id: string) => {
+    try {
+      await fetch(`http://127.0.0.1:${enginePort}/api/alerts/acknowledge`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify({ id }),
+      });
+      fetchAlerts();
+    } catch { }
+  };
 
   const suspiciousConns = connections.filter((c) => c.isSuspicious);
   const securityEvents = events.filter((e) => e.eventType === 'SECURITY_ALERT' || e.severity === 'warning');
@@ -77,6 +126,82 @@ export const SecurityScreen: React.FC = () => {
           <div className="px-3 py-1.5 rounded-lg bg-[#060a14] border border-slate-800 text-slate-300 flex items-center space-x-2">
             <EyeOff className="w-3.5 h-3.5 text-cyan-400" />
             <span>ZERO CLOUD EXFILTRATION</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Smart Alerts & Notification Configuration (REQ-09) */}
+      <div className="p-5 rounded-2xl bg-[#090f20]/80 border border-purple-500/20 shadow-xl space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-purple-500/20">
+          <div className="flex items-center space-x-2">
+            <Sliders className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-mono font-bold text-purple-200 uppercase tracking-wider">
+              Smart Alerts Engine & Windows Desktop Notification Rules
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              const next = !enableDesktopNotifs;
+              setEnableDesktopNotifs(next);
+              if (next && (window as any).electronAPI?.sendNotification) {
+                (window as any).electronAPI.sendNotification(
+                  'NETSPECTRE Alerts Enabled',
+                  'Windows desktop alerts will trigger upon detected latency spikes or anomalous sockets.'
+                );
+              }
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center space-x-2 transition ${
+              enableDesktopNotifs
+                ? 'bg-purple-950 text-purple-300 border border-purple-500/50 shadow-md'
+                : 'bg-slate-900 text-slate-500 border border-slate-800'
+            }`}
+          >
+            {enableDesktopNotifs ? <Bell className="w-3.5 h-3.5 text-purple-400" /> : <BellOff className="w-3.5 h-3.5 text-slate-500" />}
+            <span>{enableDesktopNotifs ? 'Desktop Notifications Active' : 'Notifications Muted'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3 rounded-xl bg-[#070b16] border border-slate-800/80">
+            <div className="flex justify-between text-xs font-mono text-slate-300 mb-1">
+              <span>Latency Spike Alert Threshold:</span>
+              <span className="text-purple-300 font-bold">{latencyThresholdMs} ms</span>
+            </div>
+            <input
+              type="range"
+              min="50"
+              max="500"
+              step="10"
+              value={latencyThresholdMs}
+              onChange={(e) => setLatencyThresholdMs(Number(e.target.value))}
+              className="w-full accent-purple-500"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+              <span>50 ms (Strict)</span>
+              <span>250 ms (Normal)</span>
+              <span>500 ms (Lenient)</span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#070b16] border border-slate-800/80">
+            <div className="flex justify-between text-xs font-mono text-slate-300 mb-1">
+              <span>Outbound Burst Alert Threshold:</span>
+              <span className="text-cyan-300 font-bold">{burstThresholdMb} MB/s</span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value={burstThresholdMb}
+              onChange={(e) => setBurstThresholdMb(Number(e.target.value))}
+              className="w-full accent-cyan-500"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+              <span>1 MB/s</span>
+              <span>10 MB/s</span>
+              <span>50 MB/s</span>
+            </div>
           </div>
         </div>
       </div>
@@ -154,6 +279,64 @@ export const SecurityScreen: React.FC = () => {
                 </div>
                 <div className="text-slate-500 text-[10px] shrink-0">
                   {formatTimestamp(ev.timestamp)}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Persistent Engine Alerts Log (REQ-09 & REQ-16) */}
+      <div className="space-y-3 pt-4">
+        <div className="font-mono text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Bell className="w-4 h-4 text-purple-400" />
+            <span>PERSISTENT ENGINE ANOMALY NOTIFICATIONS ({engineAlerts.length})</span>
+          </div>
+          <span className="text-[10px] text-slate-500 font-normal">
+            Stored in %APPDATA%\NetSpectre\data\alerts.json
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          {engineAlerts.length === 0 ? (
+            <div className="p-4 rounded-xl bg-[#090e1c]/60 border border-slate-800 text-center text-xs font-mono text-slate-500">
+              No persistent anomaly triggers recorded. Alert history is clean.
+            </div>
+          ) : (
+            engineAlerts.map((al: any) => (
+              <div
+                key={al.id}
+                className="p-3.5 rounded-xl bg-[#090f20] border border-purple-500/30 flex items-center justify-between text-xs font-mono"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-1.5 rounded-lg bg-purple-950 border border-purple-500/40 text-purple-400">
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-purple-300 font-bold">{al.title || al.type}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/30">
+                        {al.severity || 'WARNING'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {al.message || al.description}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <span className="text-slate-500 text-[10px]">
+                    {al.timestamp ? new Date(al.timestamp).toLocaleTimeString() : 'Recent'}
+                  </span>
+                  <button
+                    onClick={() => handleAcknowledge(al.id)}
+                    className="px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900 border border-purple-500/40 text-purple-300 text-[11px] font-mono flex items-center space-x-1 transition"
+                  >
+                    <CheckCircle className="w-3 h-3 text-emerald-400" />
+                    <span>Acknowledge</span>
+                  </button>
                 </div>
               </div>
             ))

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const FirewallControlScreen: React.FC = () => {
-  const { enginePort, applications } = useNetworkStore();
+  const { enginePort, applications, authToken, isElevated } = useNetworkStore();
   const [rules, setRules] = useState<FirewallRule[]>([]);
   const [audit, setAudit] = useState<FirewallAuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,12 +26,22 @@ export const FirewallControlScreen: React.FC = () => {
   const [selectedAppPid, setSelectedAppPid] = useState<number | ''>('');
   const [customPath, setCustomPath] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRollingBack, setIsRollingBack] = useState(false);
+
+  const getHeaders = (hasBody = false) => {
+    const h: Record<string, string> = {};
+    if (hasBody) h['Content-Type'] = 'application/json';
+    if (authToken) h['X-NetSpectre-Auth'] = authToken;
+    return h;
+  };
 
   const fetchFirewallStatus = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/firewall/rules`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/firewall/rules`, {
+        headers: getHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setRules(data.rules || []);
@@ -48,7 +58,7 @@ export const FirewallControlScreen: React.FC = () => {
 
   useEffect(() => {
     fetchFirewallStatus();
-  }, [enginePort]);
+  }, [enginePort, authToken]);
 
   const handleBlockApp = async () => {
     let procName = '';
@@ -71,7 +81,7 @@ export const FirewallControlScreen: React.FC = () => {
     try {
       const res = await fetch(`http://127.0.0.1:${enginePort}/api/firewall/block`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(true),
         body: JSON.stringify({ processName: procName, executablePath: exePath }),
       });
       const data = await res.json();
@@ -95,7 +105,7 @@ export const FirewallControlScreen: React.FC = () => {
     try {
       const res = await fetch(`http://127.0.0.1:${enginePort}/api/firewall/unblock`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(true),
         body: JSON.stringify({ ruleName }),
       });
       const data = await res.json();
@@ -106,6 +116,25 @@ export const FirewallControlScreen: React.FC = () => {
       }
     } catch (err: any) {
       alert(`Error unblocking rule: ${err.message}`);
+    }
+  };
+
+  const handleRollbackAll = async () => {
+    if (!confirm('EMERGENCY ROLLBACK: Restore outbound internet access for ALL NETSPECTRE blocked applications?')) return;
+
+    setIsRollingBack(true);
+    try {
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/firewall/unblock-all`, {
+        method: 'POST',
+        headers: getHeaders(true),
+      });
+      if (res.ok) {
+        await fetchFirewallStatus();
+      }
+    } catch (err: any) {
+      alert(`Failed to execute emergency rollback: ${err.message}`);
+    } finally {
+      setIsRollingBack(false);
     }
   };
 
@@ -129,15 +158,46 @@ export const FirewallControlScreen: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={fetchFirewallStatus}
-          disabled={loading}
-          className="px-3.5 py-2 rounded-xl bg-[#091024] hover:bg-[#0d1633] border border-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center space-x-2 transition"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Rules</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {rules.length > 0 && (
+            <button
+              onClick={handleRollbackAll}
+              disabled={isRollingBack}
+              className="px-3.5 py-2 rounded-xl bg-rose-950 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-xs font-mono flex items-center space-x-2 transition"
+            >
+              <Unlock className="w-3.5 h-3.5" />
+              <span>{isRollingBack ? 'Restoring...' : 'Rollback All Rules'}</span>
+            </button>
+          )}
+
+          <button
+            onClick={fetchFirewallStatus}
+            disabled={loading}
+            className="px-3.5 py-2 rounded-xl bg-[#091024] hover:bg-[#0d1633] border border-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center space-x-2 transition"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh Rules</span>
+          </button>
+        </div>
       </div>
+
+      {/* Elevation Notice Banner (REQ-04) */}
+      {!isElevated && (
+        <div className="mt-4 p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <div className="font-mono font-bold">ADMINISTRATOR ELEVATION REQUIRED</div>
+              <div className="text-[11px] text-amber-300/80 mt-0.5">
+                NETSPECTRE is currently running in standard user mode. Creating or modifying Windows Defender Firewall rules via `netsh advfirewall` requires running NETSPECTRE as Administrator.
+              </div>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded bg-amber-950 border border-amber-500/50 text-[10px] font-mono font-bold text-amber-300 shrink-0">
+            READ-ONLY MODE
+          </span>
+        </div>
+      )}
 
       {error && (
         <div className="mt-4 p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center space-x-3">

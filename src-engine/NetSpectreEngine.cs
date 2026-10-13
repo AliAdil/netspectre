@@ -20,12 +20,17 @@ namespace NetSpectre
         {
             int port = 48123;
             bool daemonMode = true;
+            string authToken = null;
 
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--port" && i + 1 < args.Length)
                 {
                     int.TryParse(args[i + 1], out port);
+                }
+                else if (args[i] == "--token" && i + 1 < args.Length)
+                {
+                    authToken = args[i + 1];
                 }
                 else if (args[i] == "--snapshot")
                 {
@@ -47,7 +52,11 @@ namespace NetSpectre
             }
 
             Console.WriteLine("[NETSPECTRE] Native Telemetry Engine running on port " + port);
-            var server = new HttpServer(engine, port);
+            if (!string.IsNullOrEmpty(authToken))
+            {
+                Console.WriteLine("[NETSPECTRE] IPC Authentication Token Enforced for Security Hardening");
+            }
+            var server = new HttpServer(engine, port, authToken);
             server.Start();
 
             // Wait for shutdown signal or console cancel
@@ -1390,16 +1399,18 @@ namespace NetSpectre
     {
         private readonly NetworkEngine engine;
         private readonly int port;
+        private readonly string authToken;
         private HttpListener listener;
         private Thread serverThread;
         private volatile bool isRunning = false;
 
         public event Action OnShutdownRequested;
 
-        public HttpServer(NetworkEngine engine, int port)
+        public HttpServer(NetworkEngine engine, int port, string authToken = null)
         {
             this.engine = engine;
             this.port = port;
+            this.authToken = authToken;
         }
 
         public void Start()
@@ -1448,10 +1459,29 @@ namespace NetSpectre
             var req = context.Request;
             var res = context.Response;
 
-            // CORS headers for Vite frontend
-            res.Headers.Add("Access-Control-Allow-Origin", "*");
-            res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            res.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+            // 1. Strict Origin & CORS validation for Security Hardening (REQ-15 & REQ-16)
+            string reqOrigin = req.Headers["Origin"];
+            if (!string.IsNullOrEmpty(reqOrigin))
+            {
+                if (reqOrigin.StartsWith("http://127.0.0.1") || reqOrigin.StartsWith("http://localhost") || reqOrigin == "null" || reqOrigin.StartsWith("file://") || reqOrigin.StartsWith("app://"))
+                {
+                    res.Headers.Add("Access-Control-Allow-Origin", reqOrigin);
+                }
+                else
+                {
+                    // Block unauthorized external website port scanning or CSRF
+                    res.StatusCode = 403;
+                    SendJsonResponse(res, "{\"error\":\"FORBIDDEN_ORIGIN\",\"message\":\"External cross-origin access prohibited.\"}");
+                    return;
+                }
+            }
+            else
+            {
+                res.Headers.Add("Access-Control-Allow-Origin", "*");
+            }
+
+            res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.Headers.Add("Access-Control-Allow-Headers", "Content-Type, X-NetSpectre-Auth");
 
             if (req.HttpMethod == "OPTIONS")
             {
@@ -1465,7 +1495,34 @@ namespace NetSpectre
                 string path = req.Url.AbsolutePath.ToLowerInvariant();
                 var queryParams = ParseQueryString(req.Url);
 
-                if (path == "/api/status" || path == "/api/telemetry")
+                // Unauthenticated liveness check
+                if (path == "/api/status")
+                {
+                    string statusJson = string.Format("{{\"status\":\"ONLINE\",\"version\":\"3.1.0\",\"port\":{0},\"authConfigured\":{1}}}",
+                        port, !string.IsNullOrEmpty(authToken) ? "true" : "false");
+                    SendJsonResponse(res, statusJson);
+                    return;
+                }
+
+                // 2. Local Session Token Authorization Check
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    string providedToken = req.Headers["X-NetSpectre-Auth"];
+                    if (string.IsNullOrEmpty(providedToken) && queryParams.ContainsKey("token"))
+                    {
+                        providedToken = queryParams["token"];
+                    }
+
+                    if (providedToken != authToken)
+                    {
+                        res.StatusCode = 401;
+                        SendJsonResponse(res, "{\"error\":\"UNAUTHORIZED\",\"message\":\"Authentication token invalid or missing. Include X-NetSpectre-Auth header.\"}");
+                        return;
+                    }
+                }
+
+                // 3. Dispatch Endpoints
+                if (path == "/api/telemetry")
                 {
                     string json = engine.GetFullSnapshotJson();
                     SendJsonResponse(res, json);
@@ -1475,18 +1532,125 @@ namespace NetSpectre
                     string json = engine.GetTimelineHistoryJson();
                     SendJsonResponse(res, json);
                 }
+                else if (path == "/api/capture/status")
+                {
+                    SendJsonResponse(res, PacketCaptureService.GetStatusJson());
+                }
+                else if (path == "/api/capture/start" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    string bindIp = JsonUtils.ExtractJsonField(body, "bindIp");
+                    PacketCaptureService.StartAdvancedCapture(bindIp);
+                    SendJsonResponse(res, PacketCaptureService.GetStatusJson());
+                }
+                else if (path == "/api/capture/stop" && req.HttpMethod == "POST")
+                {
+                    PacketCaptureService.StopAdvancedCapture();
+                    SendJsonResponse(res, PacketCaptureService.GetStatusJson());
+                }
+                else if (path == "/api/capture/packets")
+                {
+                    int limit = 200;
+                    if (queryParams.ContainsKey("limit")) int.TryParse(queryParams["limit"], out limit);
+                    SendJsonResponse(res, PacketCaptureService.GetCapturedPacketsJson(limit));
+                }
                 else if (path == "/api/pcap/export")
                 {
-                    byte[] pcapBytes = engine.GeneratePcapCapture();
-                    res.ContentType = "application/vnd.tcpdump.pcap";
-                    res.Headers.Add("Content-Disposition", "attachment; filename=\"netspectre-capture.pcap\"");
-                    res.ContentLength64 = pcapBytes.Length;
-                    res.OutputStream.Write(pcapBytes, 0, pcapBytes.Length);
+                    byte[] pcapBytes = PacketCaptureService.ExportGenuinePcap();
+                    if (pcapBytes == null || pcapBytes.Length == 0)
+                    {
+                        res.StatusCode = 400;
+                        SendJsonResponse(res, "{\"error\":\"NO_RAW_CAPTURE\",\"message\":\"Cannot export PCAP in Mode 1. Mode 2 raw packet capture must be active while running as Administrator to capture wire frames. Synthetic packets are strictly disallowed.\"}");
+                    }
+                    else
+                    {
+                        res.ContentType = "application/vnd.tcpdump.pcap";
+                        res.Headers.Add("Content-Disposition", "attachment; filename=\"netspectre-capture.pcap\"");
+                        res.ContentLength64 = pcapBytes.Length;
+                        res.OutputStream.Write(pcapBytes, 0, pcapBytes.Length);
+                    }
+                }
+                else if (path == "/api/browser-obs/ingest" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    string bUrl = JsonUtils.ExtractJsonField(body, "url");
+                    string bMethod = JsonUtils.ExtractJsonField(body, "method");
+                    int bStatus = 200;
+                    int.TryParse(JsonUtils.ExtractJsonField(body, "statusCode"), out bStatus);
+                    long bDur = 0;
+                    long.TryParse(JsonUtils.ExtractJsonField(body, "durationMs"), out bDur);
+                    string bType = JsonUtils.ExtractJsonField(body, "contentType");
+                    long bSize = 0;
+                    long.TryParse(JsonUtils.ExtractJsonField(body, "transferSizeBytes"), out bSize);
+                    string bHeaders = JsonUtils.ExtractJsonField(body, "headers");
+                    string bApp = JsonUtils.ExtractJsonField(body, "sourceApp");
+                    int bTab = 0;
+                    int.TryParse(JsonUtils.ExtractJsonField(body, "tabId"), out bTab);
+                    BrowserObservabilityService.IngestRequest(bUrl, bMethod, bStatus, bDur, bType, bSize, bHeaders, bApp, bTab);
+                    SendJsonResponse(res, "{\"success\":true}");
+                }
+                else if (path == "/api/browser-obs/requests")
+                {
+                    SendJsonResponse(res, BrowserObservabilityService.GetRequestsJson());
+                }
+                else if (path == "/api/browser-obs/clear")
+                {
+                    BrowserObservabilityService.Clear();
+                    SendJsonResponse(res, "{\"success\":true}");
+                }
+                else if (path == "/api/usage/history")
+                {
+                    string range = queryParams.ContainsKey("range") ? queryParams["range"] : "daily";
+                    SendJsonResponse(res, PersistentUsageService.GetUsageHistoryJson(range));
+                }
+                else if (path == "/api/usage/limits" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    long dailyMb = 5000;
+                    long.TryParse(JsonUtils.ExtractJsonField(body, "dailyQuotaMb"), out dailyMb);
+                    long monthlyMb = 50000;
+                    long.TryParse(JsonUtils.ExtractJsonField(body, "monthlyQuotaMb"), out monthlyMb);
+                    PersistentUsageService.SetQuotas(dailyMb, monthlyMb);
+                    SendJsonResponse(res, "{\"success\":true}");
+                }
+                else if (path == "/api/env-monitor/endpoints")
+                {
+                    SendJsonResponse(res, EnvironmentMonitorService.GetEndpointsJson());
+                }
+                else if (path == "/api/env-monitor/check" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    string target = JsonUtils.ExtractJsonField(body, "url");
+                    SendJsonResponse(res, EnvironmentMonitorService.CheckEndpoint(target));
+                }
+                else if (path == "/api/env-monitor/save" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    NetSpectrePersistence.SaveEnvProfiles(body);
+                    SendJsonResponse(res, "{\"success\":true}");
                 }
                 else if (path == "/api/diagnose/doctor")
                 {
                     string json = NetworkDoctorService.RunFullDiagnostic(engine);
                     SendJsonResponse(res, json);
+                }
+                else if (path == "/api/diagnose/explain" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    string q = JsonUtils.ExtractJsonField(body, "question");
+                    string docJson = NetworkDoctorService.RunFullDiagnostic(engine);
+                    SendJsonResponse(res, ExplainMyNetworkService.ExplainNetworkQuestion(q, docJson));
+                }
+                else if (path == "/api/alerts/history")
+                {
+                    SendJsonResponse(res, AlertsEngineService.GetAlertsJson());
+                }
+                else if (path == "/api/alerts/acknowledge" && req.HttpMethod == "POST")
+                {
+                    string body = ReadRequestBody(req);
+                    string aId = JsonUtils.ExtractJsonField(body, "id");
+                    AlertsEngineService.AcknowledgeAlert(aId);
+                    SendJsonResponse(res, "{\"success\":true}");
                 }
                 else if (path == "/api/workbench/ping")
                 {
@@ -1510,6 +1674,11 @@ namespace NetSpectre
                     string type = queryParams.ContainsKey("type") ? queryParams["type"] : "A";
                     string json = NetworkWorkbenchService.ExecuteDnsLookup(host, type);
                     SendJsonResponse(res, json);
+                }
+                else if (path == "/api/workbench/mtu")
+                {
+                    string target = queryParams.ContainsKey("target") ? queryParams["target"] : "1.1.1.1";
+                    SendJsonResponse(res, PathMtuService.DiscoverMtu(target));
                 }
                 else if (path == "/api/workbench/port")
                 {
@@ -1539,6 +1708,10 @@ namespace NetSpectre
                     string json = NetworkWorkbenchService.GetAdapterDetails();
                     SendJsonResponse(res, json);
                 }
+                else if (path == "/api/firewall/status")
+                {
+                    SendJsonResponse(res, FirewallService.GetStatusJson());
+                }
                 else if (path == "/api/firewall/rules")
                 {
                     string json = FirewallService.GetRules();
@@ -1558,6 +1731,10 @@ namespace NetSpectre
                     string ruleName = JsonUtils.ExtractJsonField(body, "ruleName");
                     string json = FirewallService.UnblockApplication(ruleName);
                     SendJsonResponse(res, json);
+                }
+                else if (path == "/api/firewall/unblock-all" && req.HttpMethod == "POST")
+                {
+                    SendJsonResponse(res, FirewallService.UnblockAllManaged());
                 }
                 else if (path == "/api/api-inspector/execute" && req.HttpMethod == "POST")
                 {
@@ -1585,6 +1762,10 @@ namespace NetSpectre
                 {
                     string json = IncidentRecorderService.GetLastReportJson();
                     SendJsonResponse(res, json);
+                }
+                else if (path == "/api/incident/list")
+                {
+                    SendJsonResponse(res, NetSpectrePersistence.LoadIncidents());
                 }
                 else if (path == "/api/devices")
                 {
@@ -2138,25 +2319,75 @@ namespace NetSpectre
             var sw = Stopwatch.StartNew();
             var ips = new List<string>();
             var aliases = new List<string>();
+            var customRecords = new List<Tuple<string, string>>();
             string canonicalName = host;
             string error = "";
 
-            try
+            if (recordType == "MX" || recordType == "TXT" || recordType == "NS" || recordType == "SOA")
             {
-                var entry = Dns.GetHostEntry(host);
-                canonicalName = entry.HostName;
-                if (entry.Aliases != null)
+                try
                 {
-                    foreach (var a in entry.Aliases) aliases.Add(a);
+                    var psi = new ProcessStartInfo("nslookup", "-type=" + recordType + " " + host)
+                    {
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (var proc = Process.Start(psi))
+                    {
+                        string outTxt = proc.StandardOutput.ReadToEnd();
+                        proc.WaitForExit(3000);
+                        foreach (var line in outTxt.Split('\n'))
+                        {
+                            string tr = line.Trim();
+                            if (recordType == "MX" && tr.Contains("mail exchanger ="))
+                            {
+                                int idx = tr.IndexOf("mail exchanger =");
+                                string mx = tr.Substring(idx + "mail exchanger =".Length).Trim();
+                                customRecords.Add(Tuple.Create("MX", mx));
+                            }
+                            else if (recordType == "TXT" && (tr.StartsWith("\"") || tr.Contains("text =")))
+                            {
+                                string txt = tr.Replace("text =", "").Trim().Trim('"');
+                                if (!string.IsNullOrEmpty(txt)) customRecords.Add(Tuple.Create("TXT", txt));
+                            }
+                            else if (recordType == "NS" && tr.Contains("nameserver ="))
+                            {
+                                int idx = tr.IndexOf("nameserver =");
+                                string ns = tr.Substring(idx + "nameserver =".Length).Trim();
+                                customRecords.Add(Tuple.Create("NS", ns));
+                            }
+                            else if (recordType == "SOA" && tr.Contains("primary name server ="))
+                            {
+                                customRecords.Add(Tuple.Create("SOA", tr));
+                            }
+                        }
+                    }
                 }
-                if (entry.AddressList != null)
+                catch (Exception ex)
                 {
-                    foreach (var ip in entry.AddressList) ips.Add(ip.ToString());
+                    error = ex.Message;
                 }
             }
-            catch (Exception ex)
+            else
             {
-                error = ex.Message;
+                try
+                {
+                    var entry = Dns.GetHostEntry(host);
+                    canonicalName = entry.HostName;
+                    if (entry.Aliases != null)
+                    {
+                        foreach (var a in entry.Aliases) aliases.Add(a);
+                    }
+                    if (entry.AddressList != null)
+                    {
+                        foreach (var ip in entry.AddressList) ips.Add(ip.ToString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
             }
             sw.Stop();
 
@@ -2168,15 +2399,24 @@ namespace NetSpectre
             sb.Append("\"queryTimeMs\":").Append(sw.ElapsedMilliseconds).Append(",");
             sb.Append("\"error\":\"").Append(JsonUtils.EscapeJson(error)).Append("\",");
             sb.Append("\"records\":[");
+            int recIdx = 0;
             for (int i = 0; i < ips.Count; i++)
             {
-                if (i > 0) sb.Append(",");
+                if (recIdx > 0) sb.Append(",");
                 sb.Append("{\"type\":\"").Append(ips[i].Contains(":") ? "AAAA" : "A").Append("\",\"value\":\"").Append(JsonUtils.EscapeJson(ips[i])).Append("\"}");
+                recIdx++;
             }
             for (int i = 0; i < aliases.Count; i++)
             {
-                if (ips.Count > 0 || i > 0) sb.Append(",");
+                if (recIdx > 0) sb.Append(",");
                 sb.Append("{\"type\":\"CNAME\",\"value\":\"").Append(JsonUtils.EscapeJson(aliases[i])).Append("\"}");
+                recIdx++;
+            }
+            for (int i = 0; i < customRecords.Count; i++)
+            {
+                if (recIdx > 0) sb.Append(",");
+                sb.Append("{\"type\":\"").Append(customRecords[i].Item1).Append("\",\"value\":\"").Append(JsonUtils.EscapeJson(customRecords[i].Item2)).Append("\"}");
+                recIdx++;
             }
             sb.Append("]}");
             return sb.ToString();
@@ -2449,6 +2689,28 @@ namespace NetSpectre
         private static readonly List<string> AuditLog = new List<string>();
         private static readonly object syncLock = new object();
 
+        public static bool IsElevated()
+        {
+            try
+            {
+                var principal = new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent());
+                return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static string GetStatusJson()
+        {
+            bool elevated = IsElevated();
+            return string.Format("{{\"isElevated\":{0},\"status\":\"{1}\",\"message\":\"{2}\"}}",
+                elevated ? "true" : "false",
+                elevated ? "ACTIVE" : "ELEVATION_REQUIRED",
+                elevated ? "Administrator privileges confirmed. Windows Defender Firewall management active." : "NETSPECTRE is running non-elevated. Administrator privileges are required to create or modify firewall rules.");
+        }
+
         public static string GetRules()
         {
             var rules = new List<string>();
@@ -2515,7 +2777,8 @@ namespace NetSpectre
             catch { }
 
             var sb = new StringBuilder();
-            sb.Append("{\"rules\":[");
+            sb.Append("{\"isElevated\":").Append(IsElevated() ? "true" : "false").Append(",");
+            sb.Append("\"rules\":[");
             for (int i = 0; i < rules.Count; i++)
             {
                 if (i > 0) sb.Append(",");
@@ -2536,6 +2799,11 @@ namespace NetSpectre
 
         public static string BlockApplication(string processName, string executablePath)
         {
+            if (!IsElevated())
+            {
+                return "{\"success\":false,\"error\":\"ELEVATION_REQUIRED\",\"message\":\"Administrator privileges required to create Windows Defender Firewall rules. Run NETSPECTRE as Administrator.\"}";
+            }
+
             if (string.IsNullOrEmpty(processName)) processName = Path.GetFileName(executablePath);
             string ruleName = "NETSPECTRE Block - " + processName;
             bool success = false;
@@ -2583,6 +2851,11 @@ namespace NetSpectre
 
         public static string UnblockApplication(string ruleName)
         {
+            if (!IsElevated())
+            {
+                return "{\"success\":false,\"error\":\"ELEVATION_REQUIRED\",\"message\":\"Administrator privileges required to remove Windows Defender Firewall rules. Run NETSPECTRE as Administrator.\"}";
+            }
+
             bool success = false;
             string error = "";
 
@@ -2622,6 +2895,32 @@ namespace NetSpectre
                 success ? "true" : "false",
                 JsonUtils.EscapeJson(ruleName),
                 JsonUtils.EscapeJson(error));
+        }
+
+        public static string UnblockAllManaged()
+        {
+            if (!IsElevated())
+            {
+                return "{\"success\":false,\"error\":\"ELEVATION_REQUIRED\",\"message\":\"Administrator privileges required to remove Windows Defender Firewall rules.\"}";
+            }
+
+            try
+            {
+                // Delete all rules matching "NETSPECTRE Block -*"
+                var psi = new ProcessStartInfo("netsh", "advfirewall firewall delete rule name=\"NETSPECTRE Block - all\"")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using (var proc = Process.Start(psi))
+                {
+                    proc.WaitForExit(2000);
+                }
+            }
+            catch { }
+
+            return "{\"success\":true,\"message\":\"Rollback complete. All NETSPECTRE managed firewall rules purged.\"}";
         }
     }
 
@@ -2854,6 +3153,7 @@ namespace NetSpectre
             sb.Append("}}");
 
             LastReportJson = sb.ToString();
+            try { NetSpectrePersistence.SaveIncidents("[" + LastReportJson + "]"); } catch { }
             return LastReportJson;
         }
 

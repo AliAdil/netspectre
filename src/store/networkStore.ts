@@ -39,7 +39,7 @@ interface NetworkState {
 
   // Workbench Quick Jump
   workbenchTarget: string;
-  workbenchActiveTool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters';
+  workbenchActiveTool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters' | 'mtu';
 
   // Search & Filter
   searchQuery: string;
@@ -72,8 +72,8 @@ interface NetworkState {
   // Actions
   setActiveWorkspace: (workspace: WorkspaceId) => void;
   setWorkbenchTarget: (target: string) => void;
-  setWorkbenchActiveTool: (tool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters') => void;
-  launchWorkbenchTool: (tool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters', target: string) => void;
+  setWorkbenchActiveTool: (tool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters' | 'mtu') => void;
+  launchWorkbenchTool: (tool: 'ping' | 'traceroute' | 'dns' | 'port' | 'tls' | 'routes' | 'adapters' | 'mtu', target: string) => void;
   setVisMode: (mode: VisMode) => void;
   setNodeSizingMode: (mode: NodeSizingMode) => void;
   toggleHideInactive: () => void;
@@ -96,12 +96,34 @@ interface NetworkState {
   toggleParticles: () => void;
   toggleBloomGlow: () => void;
 
+  // Security Token & Packet Capture State
+  authToken: string;
+  setAuthToken: (token: string) => void;
+  captureMode: 'BASIC' | 'ADVANCED';
+  captureState: 'IDLE' | 'RUNNING' | 'UNAVAILABLE' | 'ERROR';
+  isElevated: boolean;
+  captureStatusMessage: string;
+  setCaptureStatus: (data: { mode?: 'BASIC' | 'ADVANCED'; state?: 'IDLE' | 'RUNNING' | 'UNAVAILABLE' | 'ERROR'; isElevated?: boolean; statusMessage?: string }) => void;
+
   // Polling update
   updateTelemetry: (snapshot: TelemetrySnapshot) => void;
   setConnected: (connected: boolean) => void;
 }
 
 export const useNetworkStore = create<NetworkState>((set, get) => ({
+  authToken: '',
+  setAuthToken: (token: string) => set({ authToken: token }),
+  captureMode: 'BASIC',
+  captureState: 'IDLE',
+  isElevated: false,
+  captureStatusMessage: 'Mode 1: Basic Win32 IP Helper flow telemetry.',
+  setCaptureStatus: (data) =>
+    set((state) => ({
+      captureMode: data.mode ?? state.captureMode,
+      captureState: data.state ?? state.captureState,
+      isElevated: data.isElevated ?? state.isElevated,
+      captureStatusMessage: data.statusMessage ?? state.captureStatusMessage,
+    })),
   isConnected: false,
   enginePort: 48123,
   lastUpdated: Date.now(),

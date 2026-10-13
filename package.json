@@ -1,19 +1,77 @@
 {
-  "name": "data-visulization",
-  "version": "1.0.0",
-  "description": "",
+  "name": "netspectre",
+  "productName": "NETSPECTRE",
+  "version": "3.1.0",
+  "description": "NETSPECTRE — Visual Network Intelligence & Troubleshooting Platform",
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build:ui": "vite build",
-    "build:engine": "powershell -Command \"& 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe' /target:exe /platform:x64 /optimize+ /out:src-engine\\NetSpectreEngine.exe src-engine\\NetSpectreEngine.cs\"",
+    "build:engine": "powershell -Command \"& 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe' /target:exe /platform:x64 /optimize+ /out:src-engine\\NetSpectreEngine.exe src-engine\\NetSpectreEngine.cs src-engine\\NetSpectrePersistence.cs src-engine\\PacketCaptureService.cs src-engine\\AdvancedServices.cs\"",
     "build": "npm run build:engine && npm run build:ui",
+    "dist": "npm run build && electron-builder --win",
+    "dist:dir": "npm run build && electron-builder --win --dir",
     "electron": "electron .",
     "app": "concurrently \"npm run dev\" \"electron .\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "build": {
+    "appId": "com.netspectre.enterprise",
+    "productName": "NETSPECTRE",
+    "copyright": "Copyright © 2026 NETSPECTRE Systems Architecture",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NETSPECTRE Network Intelligence"
+    },
+    "extraResources": [
+      {
+        "from": "src-engine/NetSpectreEngine.exe",
+        "to": "engine/NetSpectreEngine.exe"
+      },
+      {
+        "from": "extension",
+        "to": "extension"
+      }
+    ],
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ]
+  },
+  "keywords": [
+    "network-monitor",
+    "packet-capture",
+    "pcap",
+    "troubleshooting",
+    "developer-observability",
+    "threejs",
+    "windows-diagnostics"
+  ],
+  "author": "NETSPECTRE Systems Architecture",
+  "license": "Proprietary",
   "type": "commonjs",
   "dependencies": {
     "@types/node": "^26.6.5",

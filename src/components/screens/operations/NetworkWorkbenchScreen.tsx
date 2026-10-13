@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Server,
   Download,
+  Layers,
 } from 'lucide-react';
 
 export const NetworkWorkbenchScreen: React.FC = () => {
@@ -34,20 +35,29 @@ export const NetworkWorkbenchScreen: React.FC = () => {
     setWorkbenchTarget,
     workbenchActiveTool,
     setWorkbenchActiveTool,
+    authToken,
   } = useNetworkStore();
 
   const [target, setTarget] = useState(workbenchTarget || '1.1.1.1');
   const [port, setPort] = useState(443);
+  const [dnsType, setDnsType] = useState<'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS' | 'SOA'>('A');
   const [loading, setLoading] = useState(false);
 
   // Results
   const [pingResult, setPingResult] = useState<PingResult | null>(null);
   const [traceResult, setTraceResult] = useState<TracerouteResult | null>(null);
   const [dnsResult, setDnsResult] = useState<DnsLookupResult | null>(null);
+  const [mtuResult, setMtuResult] = useState<any | null>(null);
   const [portResult, setPortResult] = useState<PortTestResult | null>(null);
   const [tlsResult, setTlsResult] = useState<TlsInspectResult | null>(null);
   const [routes, setRoutes] = useState<RouteEntry[]>([]);
   const [adapters, setAdapters] = useState<AdapterDetail[]>([]);
+
+  const getHeaders = () => {
+    const h: Record<string, string> = {};
+    if (authToken) h['X-NetSpectre-Auth'] = authToken;
+    return h;
+  };
 
   // Sync target when store updates
   useEffect(() => {
@@ -63,12 +73,14 @@ export const NetworkWorkbenchScreen: React.FC = () => {
     } else if (workbenchActiveTool === 'adapters') {
       fetchAdapters();
     }
-  }, [workbenchActiveTool, enginePort]);
+  }, [workbenchActiveTool, enginePort, authToken]);
 
   const runPing = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/ping?target=${encodeURIComponent(target)}&count=4`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/ping?target=${encodeURIComponent(target)}&count=4`, {
+        headers: getHeaders(),
+      });
       if (res.ok) setPingResult(await res.json());
     } catch { }
     finally { setLoading(false); }
@@ -77,7 +89,9 @@ export const NetworkWorkbenchScreen: React.FC = () => {
   const runTraceroute = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/traceroute?target=${encodeURIComponent(target)}&maxHops=18`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/traceroute?target=${encodeURIComponent(target)}&maxHops=18`, {
+        headers: getHeaders(),
+      });
       if (res.ok) setTraceResult(await res.json());
     } catch { }
     finally { setLoading(false); }
@@ -86,8 +100,21 @@ export const NetworkWorkbenchScreen: React.FC = () => {
   const runDns = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/dns?host=${encodeURIComponent(target)}&type=A`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/dns?host=${encodeURIComponent(target)}&type=${dnsType}`, {
+        headers: getHeaders(),
+      });
       if (res.ok) setDnsResult(await res.json());
+    } catch { }
+    finally { setLoading(false); }
+  };
+
+  const runMtu = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/mtu?target=${encodeURIComponent(target)}`, {
+        headers: getHeaders(),
+      });
+      if (res.ok) setMtuResult(await res.json());
     } catch { }
     finally { setLoading(false); }
   };
@@ -95,7 +122,9 @@ export const NetworkWorkbenchScreen: React.FC = () => {
   const runPortTest = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/port?host=${encodeURIComponent(target)}&port=${port}&timeout=2500`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/port?host=${encodeURIComponent(target)}&port=${port}&timeout=2500`, {
+        headers: getHeaders(),
+      });
       if (res.ok) setPortResult(await res.json());
     } catch { }
     finally { setLoading(false); }
@@ -104,7 +133,9 @@ export const NetworkWorkbenchScreen: React.FC = () => {
   const runTlsInspect = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/tls?host=${encodeURIComponent(target)}&port=${port}`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/tls?host=${encodeURIComponent(target)}&port=${port}`, {
+        headers: getHeaders(),
+      });
       if (res.ok) setTlsResult(await res.json());
     } catch { }
     finally { setLoading(false); }
@@ -113,7 +144,9 @@ export const NetworkWorkbenchScreen: React.FC = () => {
   const fetchRoutes = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/routes`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/routes`, {
+        headers: getHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setRoutes(data.routes || []);
@@ -125,7 +158,9 @@ export const NetworkWorkbenchScreen: React.FC = () => {
   const fetchAdapters = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/adapters`);
+      const res = await fetch(`http://127.0.0.1:${enginePort}/api/workbench/adapters`, {
+        headers: getHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setAdapters(data.adapters || []);
@@ -139,6 +174,7 @@ export const NetworkWorkbenchScreen: React.FC = () => {
       case 'ping': runPing(); break;
       case 'traceroute': runTraceroute(); break;
       case 'dns': runDns(); break;
+      case 'mtu': runMtu(); break;
       case 'port': runPortTest(); break;
       case 'tls': runTlsInspect(); break;
       case 'routes': fetchRoutes(); break;
@@ -173,6 +209,7 @@ export const NetworkWorkbenchScreen: React.FC = () => {
           { id: 'ping', label: 'Ping Test', icon: Radio },
           { id: 'traceroute', label: 'Traceroute', icon: Share2 },
           { id: 'dns', label: 'DNS Inspector', icon: Globe },
+          { id: 'mtu', label: 'Path MTU Discovery', icon: Layers },
           { id: 'port', label: 'TCP Port Prober', icon: Zap },
           { id: 'tls', label: 'TLS Cert Inspector', icon: Lock },
           { id: 'routes', label: 'Routing Table', icon: Route },
@@ -212,6 +249,24 @@ export const NetworkWorkbenchScreen: React.FC = () => {
               className="w-full px-4 py-2.5 rounded-xl bg-[#070b16] border border-cyan-500/30 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400"
             />
           </div>
+
+          {workbenchActiveTool === 'dns' && (
+            <div className="w-full sm:w-36">
+              <select
+                value={dnsType}
+                onChange={(e) => setDnsType(e.target.value as any)}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#070b16] border border-cyan-500/30 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400 font-bold"
+              >
+                <option value="A">A (IPv4)</option>
+                <option value="AAAA">AAAA (IPv6)</option>
+                <option value="CNAME">CNAME</option>
+                <option value="MX">MX (Mail)</option>
+                <option value="TXT">TXT (SPF/DKIM)</option>
+                <option value="NS">NS (Nameserver)</option>
+                <option value="SOA">SOA (Authority)</option>
+              </select>
+            </div>
+          )}
 
           {(workbenchActiveTool === 'port' || workbenchActiveTool === 'tls') && (
             <div className="w-full sm:w-28">
@@ -359,6 +414,83 @@ export const NetworkWorkbenchScreen: React.FC = () => {
           ) : (
             <div className="p-8 text-center text-xs font-mono text-slate-500 border border-dashed border-slate-800 rounded-2xl">
               Enter domain and click "RUN DIAGNOSTIC" to query DNS records.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TOOL: PATH MTU DISCOVERY RESULTS */}
+      {workbenchActiveTool === 'mtu' && (
+        <div className="mt-6 space-y-4">
+          {mtuResult ? (
+            <div className="p-5 rounded-2xl bg-[#091024]/90 border border-cyan-500/30 shadow-xl space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-4 border-b border-cyan-500/20">
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Target Host</div>
+                  <div className="text-sm font-mono font-bold text-slate-100 truncate">{mtuResult.target}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Discovered Path MTU</div>
+                  <div className="text-base font-mono font-bold text-emerald-300">
+                    {mtuResult.discoveredMtu > 0 ? `${mtuResult.discoveredMtu} bytes` : 'Probing...'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Probed Range</div>
+                  <div className="text-sm font-mono font-bold text-purple-300">
+                    {mtuResult.minTested} - {mtuResult.maxTested} B
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Path Status</div>
+                  <div className="text-sm font-mono font-bold text-cyan-300">
+                    {mtuResult.status}
+                  </div>
+                </div>
+              </div>
+
+              {mtuResult.probes && mtuResult.probes.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+                    ICMP Don&apos;t Fragment (DF=1) Wire Probe Trace:
+                  </div>
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                    {mtuResult.probes.map((probe: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 rounded-lg bg-[#070b16] border border-cyan-500/10 flex items-center justify-between text-xs font-mono"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="w-5 text-slate-500 font-bold">#{idx + 1}</span>
+                          <span className="text-slate-200">
+                            Payload: <strong className="text-cyan-300">{probe.payloadSize} B</strong> (Total Frame: {probe.payloadSize + 28} B)
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                            DF Flag = 1
+                          </span>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                              probe.status === 'Success'
+                                ? 'bg-emerald-950 text-emerald-300 border-emerald-500/40'
+                                : 'bg-rose-950 text-rose-300 border-rose-500/40'
+                            }`}
+                          >
+                            {probe.status}
+                          </span>
+                          <span className="text-slate-400 text-[11px]">{probe.rttMs} ms</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-xs font-mono text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+              Enter target host (e.g. 1.1.1.1 or 8.8.8.8) and click &quot;RUN DIAGNOSTIC&quot; to probe Maximum Transmission Unit.
             </div>
           )}
         </div>

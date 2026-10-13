@@ -1,11 +1,28 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Notification } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-
+const crypto = require('crypto');
 const http = require('http');
 
 let mainWindow = null;
 let engineProcess = null;
+const sessionToken = crypto.randomBytes(24).toString('hex');
+
+ipcMain.handle('get-session-token', () => sessionToken);
+
+ipcMain.on('show-notification', (event, { title, body }) => {
+  try {
+    if (Notification.isSupported()) {
+      new Notification({ title: title || 'NETSPECTRE Alert', body: body || '' }).show();
+    }
+  } catch (e) {}
+});
+
+ipcMain.on('open-external', (event, url) => {
+  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    shell.openExternal(url);
+  }
+});
 
 function startEngine() {
   const req = http.get('http://127.0.0.1:48123/api/status', (res) => {
@@ -13,11 +30,14 @@ function startEngine() {
   });
 
   req.on('error', () => {
-    const enginePath = path.join(__dirname, '..', 'src-engine', 'NetSpectreEngine.exe');
-    console.log('[NETSPECTRE] Spawning native telemetry engine:', enginePath);
+    const isPackaged = app.isPackaged;
+    const enginePath = isPackaged
+      ? path.join(process.resourcesPath, 'engine', 'NetSpectreEngine.exe')
+      : path.join(__dirname, '..', 'src-engine', 'NetSpectreEngine.exe');
+    console.log('[NETSPECTRE] Spawning native telemetry engine with security token:', enginePath);
 
     try {
-      engineProcess = spawn(enginePath, ['--port', '48123'], {
+      engineProcess = spawn(enginePath, ['--port', '48123', '--token', sessionToken], {
         stdio: ['ignore', 'pipe', 'pipe'],
         detached: false,
       });
