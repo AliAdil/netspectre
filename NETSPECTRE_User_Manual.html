@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NETSPECTRE — Complete Application Usage Manual & Operations Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #070b16;
+    color: #e2e8f0;
+    line-height: 1.48;
+    font-size: 9.5pt;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cover-page {
+    page-break-after: always;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 20px;
+    border-left: 6px solid #00f3ff;
+  }
+
+  .cover-header {
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    padding-bottom: 24px;
+  }
+
+  .badge-tag {
+    display: inline-block;
+    background: rgba(0, 243, 255, 0.12);
+    color: #00f3ff;
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+  }
+
+  h1.cover-title {
+    font-size: 36pt;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #ffffff;
+    margin: 0 0 10px 0;
+    text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+  }
+
+  .cover-subtitle {
+    font-size: 15pt;
+    color: #94a3b8;
+    max-width: 650px;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .cover-meta {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(0, 243, 255, 0.25);
+    border-radius: 12px;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 9.5pt;
+  }
+
+  .cover-meta-item strong {
+    color: #00f3ff;
+    display: block;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .page {
+    padding: 8px 0;
+  }
+
+  h2 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h3, h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  table, pre, .card, .callout, .grid-2 {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h2 {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 16pt;
+    color: #00f3ff;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    padding-bottom: 6px;
+    margin-top: 26px;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+  }
+
+  h3 {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 12pt;
+    color: #38bdf8;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  h4 {
+    font-size: 10.5pt;
+    color: #f1f5f9;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0 0 10px 0;
+    color: #cbd5e1;
+  }
+
+  ul, ol {
+    margin: 0 0 14px 0;
+    padding-left: 22px;
+    color: #cbd5e1;
+  }
+
+  li {
+    margin-bottom: 5px;
+  }
+
+  code {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    background: rgba(30, 41, 59, 0.8);
+    color: #38bdf8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9pt;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+
+  pre {
+    background: #040711;
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 8.5pt;
+    color: #f8fafc;
+    overflow-x: auto;
+    margin: 10px 0 16px 0;
+    line-height: 1.45;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px 0;
+    font-size: 9pt;
+  }
+
+  th {
+    background: #0f172a;
+    color: #00f3ff;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    text-align: left;
+    padding: 9px 12px;
+    border: 1px solid rgba(0, 243, 255, 0.25);
+  }
+
+  td {
+    padding: 8px 12px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    background: rgba(11, 19, 38, 0.6);
+    color: #cbd5e1;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background: rgba(15, 23, 42, 0.85);
+  }
+
+  .callout {
+    background: rgba(12, 20, 40, 0.85);
+    border-left: 4px solid #00f3ff;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 9.5pt;
+  }
+
+  .callout.warning {
+    border-left-color: #f59e0b;
+    background: rgba(40, 25, 10, 0.6);
+  }
+
+  .callout.security {
+    border-left-color: #ef4444;
+    background: rgba(45, 10, 15, 0.6);
+  }
+
+  .callout-title {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 12px 0;
+  }
+
+  .card {
+    background: rgba(11, 19, 38, 0.7);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .card-title {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-weight: 700;
+    color: #38bdf8;
+    font-size: 10pt;
+    margin-bottom: 6px;
+  }
+
+  .footer-note {
+    font-size: 8pt;
+    color: #64748b;
+    text-align: center;
+    border-top: 1px solid rgba(51, 65, 85, 0.5);
+    padding-top: 8px;
+    margin-top: 20px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= COVER PAGE ================= -->
+<div class="cover-page">
+  <div class="cover-header">
+    <div class="badge-tag">OFFICIAL OPERATIONS MANUAL • V2.4 WIN-NATIVE</div>
+    <h1 class="cover-title">NETSPECTRE</h1>
+    <p class="cover-subtitle">Real-Time Windows Network Traffic Intelligence, Threat Surveillance & Multi-Dimensional Visualization Platform</p>
+  </div>
+
+  <div>
+    <div class="callout" style="margin-bottom: 24px;">
+      <div class="callout-title">CORE PLATFORM PURPOSE</div>
+      NETSPECTRE monitors all network traffic entering and leaving your Windows 10/11 computer, correlating low-level socket activity with exact executable processes, remote server identities, cloud infrastructures, and transport encryption states in real time.
+    </div>
+
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <strong>Application Edition</strong>
+        NETSPECTRE v2.4 (Production Win64)
+      </div>
+      <div class="cover-meta-item">
+        <strong>Telemetry Engine</strong>
+        C# Native P/Invoke (iphlpapi.dll)
+      </div>
+      <div class="cover-meta-item">
+        <strong>User Interface</strong>
+        Electron 32 • Vite • Three.js WebGL
+      </div>
+      <div class="cover-meta-item">
+        <strong>Operating System</strong>
+        Windows 10 / Windows 11 (64-bit)
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    CONFIDENTIAL & PROPRIETARY • NETSPECTRE DEFENSE & TELEMETRY SUITE
+  </div>
+</div>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page">
+  <h2>1. EXECUTIVE OVERVIEW & CAPABILITIES</h2>
+  
+  <p>
+    <strong>NETSPECTRE</strong> bridges the gap between low-level packet sniffers (like Wireshark) and per-application firewalls (like GlassWire). Traditional tools present overwhelming raw hex dumps or oversimplified numbers. NETSPECTRE combines deep Windows kernel-level socket awareness with a futuristic 2.5D neural visualization command center.
+  </p>
+
+  <h3>Primary Business & Security Questions Answered</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 28%;">Question</th>
+        <th style="width: 72%;">What NETSPECTRE Discloses</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>What data enters my PC?</strong></td>
+        <td>Real-time download throughput (B/s, KB/s, MB/s), cumulative downloaded volume, and individual inbound frame packet sizes.</td>
+      </tr>
+      <tr>
+        <td><strong>What data leaves my PC?</strong></td>
+        <td>Real-time upload speed, cumulative sent bytes, and outbound request frame sizes with directional tracking.</td>
+      </tr>
+      <tr>
+        <td><strong>Which application is talking?</strong></td>
+        <td>Exact process name (<code>chrome.exe</code>, <code>Unity.exe</code>, <code>msedge.exe</code>, <code>svchost.exe</code>), Process ID (PID), and physical binary path on disk.</td>
+      </tr>
+      <tr>
+        <td><strong>Where is it sending data?</strong></td>
+        <td>Observed remote IPv4/IPv6 addresses, resolved domain names (FQDN), and remote destination ports (443, 53, 80, 8080).</td>
+      </tr>
+      <tr>
+        <td><strong>Who owns the remote server?</strong></td>
+        <td>Hosting organization attribution (Cloudflare, Microsoft Azure, Google Cloud, AWS), Autonomous System Number (ASN), and country geolocation flags.</td>
+      </tr>
+      <tr>
+        <td><strong>Which protocol is used?</strong></td>
+        <td>Transport protocol (TCP / UDP) and application classification (TLS 1.3 / HTTPS, QUIC / HTTP3, DNS 53, mDNS 5353).</td>
+      </tr>
+      <tr>
+        <td><strong>Is the data encrypted?</strong></td>
+        <td>Full cryptographic transparency: clearly labels encrypted payloads (TLS 1.3/QUIC) vs unencrypted traffic without deceptive claims.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. SYSTEM ARCHITECTURE & DATA FLOW</h2>
+
+  <pre>
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       WINDOWS OPERATING SYSTEM KERNEL                       │
+│      [iphlpapi.dll]                     [kernel32.dll]     [Win32 Network]  │
+│    GetExtendedTcpTable               QueryFullProcessImage   GetIfTable2    │
+└──────────────────────┬──────────────────────────┬──────────────────┬────────┘
+                       │                          │                  │
+                       ▼                          ▼                  ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    NETSPECTRE NATIVE ENGINE (C# DAEMON)                     │
+│  • Microsecond Socket Poller (TCP / UDP / Listening / Sockets)              │
+│  • Windows Process Correlator & Executable Path Resolver                    │
+│  • GeoIP / ASN / Autonomous System Classifier & Suspicious Port Heuristics  │
+│  • High-Speed HTTP/SSE Daemon listening on http://127.0.0.1:48123            │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ Real-Time IPC (REST / SSE Snapshots)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   NETSPECTRE FRONTEND (ELECTRON SHELL)                      │
+│  • 2.5D Orthographic Neural Highway (Three.js WebGL Engine, 60 FPS)         │
+│  • 5 Specialized Visualization Modes (Neural, App Map, Matrix, Stream, Dest)│
+│  • Data Communication Explorer (Mode A Telemetry & Mode B Browser Observ.)   │
+│  • Binary PCAP Packet Capture Generator & Wireshark Export Engine           │
+└─────────────────────────────────────────────────────────────────────────────┘
+  </pre>
+
+  <div class="callout">
+    <div class="callout-title">100% REAL WINDOWS TELEMETRY GUARANTEE</div>
+    NETSPECTRE never generates simulated or fictional traffic. Every node, curved link, packet gauge, and particle represents genuine active socket telemetry intercepted from your physical Windows network adapter.
+  </div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page">
+  <h2>3. QUICK START & LAUNCH INSTRUCTIONS</h2>
+
+  <h3>3.1 System Prerequisites</h3>
+  <ul>
+    <li><strong>Operating System:</strong> Windows 10 or Windows 11 (64-bit edition).</li>
+    <li><strong>Runtime:</strong> Microsoft .NET Framework 4.5 or higher (pre-installed on all modern Windows systems).</li>
+    <li><strong>Node.js:</strong> Node.js v18+ with npm (for desktop frontend rendering).</li>
+  </ul>
+
+  <h3>3.2 One-Click Desktop Launch</h3>
+  <p>To start the application, navigate to the application root directory and double-click the launcher:</p>
+  <pre>launch.bat</pre>
+  <p>The launcher performs the following automated verification sequence:</p>
+  <ol>
+    <li>Checks if <code>src-engine\NetSpectreEngine.exe</code> exists; if missing, automatically compiles it using the native 64-bit C# compiler.</li>
+    <li>Verifies that the telemetry service is responding on <code>http://127.0.0.1:48123/api/status</code>.</li>
+    <li>Spawns the Electron desktop command center with hardware acceleration enabled.</li>
+  </ol>
+
+  <h3>3.3 Command-Line Startup Options</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Command</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>launch.bat</code></td>
+        <td>Primary one-click user launcher for the complete suite.</td>
+      </tr>
+      <tr>
+        <td><code>npm.cmd run electron</code></td>
+        <td>Launches the desktop Electron GUI in production mode.</td>
+      </tr>
+      <tr>
+        <td><code>npm.cmd run build:ui</code></td>
+        <td>Recompiles Vite, TypeScript, Tailwind CSS, and WebGL assets.</td>
+      </tr>
+      <tr>
+        <td><code>.\src-engine\NetSpectreEngine.exe --port 48123</code></td>
+        <td>Runs the native C# telemetry daemon as a standalone console service.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. USER INTERFACE & WORKSPACE NAVIGATION</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">1. TOP TELEMETRY HUD BAR</div>
+      <ul>
+        <li><strong>Downlink & Uplink Speeds:</strong> Instantaneous digital gauges (KB/s, MB/s).</li>
+        <li><strong>Active Flows Badge:</strong> Sockets count and active application tally.</li>
+        <li><strong>Hardware Adapter Badge:</strong> Displays your physical NIC (e.g. <em>Wi-Fi TP-Link</em>).</li>
+        <li><strong>Global Search:</strong> Filters nodes by app, domain, IP, or port.</li>
+        <li><strong>Pause / Play Button:</strong> Freezes visualization to inspect a burst.</li>
+        <li><strong>PCAP Export:</strong> One-click download of binary packet captures.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">2. SURVEILLANCE MODULES (LEFT)</div>
+      <ul>
+        <li><strong>Neural Universe:</strong> The main 2.5D animated command highway.</li>
+        <li><strong>Data Explorer:</strong> Microsecond frame inspector & payload disclosure.</li>
+        <li><strong>Applications:</strong> Per-process socket and volume catalog.</li>
+        <li><strong>Connections:</strong> Comprehensive tabular TCP/UDP socket matrix.</li>
+        <li><strong>Packet Explorer:</strong> Real-time frame waterfall and packet analysis.</li>
+        <li><strong>Destinations:</strong> Global geographic & ASN intelligence.</li>
+        <li><strong>Time Travel:</strong> Historical playback scrubber and replay controls.</li>
+        <li><strong>Security & Threats:</strong> Automated alert engine for suspicious sockets.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 10px;">
+    <div class="card-title">3. BOTTOM EVENT STREAM & RIGHT CONTEXT DRAWER</div>
+    <p style="margin-bottom: 6px;">
+      <strong>Real-Time Event Stream (Bottom):</strong> Continuously logs socket lifecycle events (<code>CONNECT</code>, <code>DISCONNECT</code>) with exact timestamps, process attribution, and remote endpoints. Click <em>"Click to collapse"</em> to expand or minimize.
+    </p>
+    <p style="margin: 0;">
+      <strong>Context Inspector Drawer (Right):</strong> Clicking on any node or socket opens a deep forensic drawer showing remote ASN, byte counters, packet tallies, duration, copyable IPs, and suspicious heuristics.
+    </p>
+  </div>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<div class="page">
+  <h2>5. THE 2.5D NEURAL UNIVERSE & 5-COLUMN HIGHWAY</h2>
+  
+  <p>
+    The <strong>Neural Universe</strong> is the centerpiece of NETSPECTRE. It eliminates confusing 3D wireframe tangles in favor of an organized, 2.5D orthographic pipeline flowing cleanly from left to right.
+  </p>
+
+  <h3>The 5 Symmetrical Highway Columns</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 20%;">Column</th>
+        <th style="width: 25%;">Coordinates & Visuals</th>
+        <th style="width: 55%;">Contents & Network Telemetry</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Local System</strong></td>
+        <td>X = -380<br>Cyan Core (#00f3ff)</td>
+        <td>Represents your Windows PC. Displays computer name, local LAN IP address (e.g. <code>192.168.1.112</code>), active hardware adapter, and total up/down speeds.</td>
+      </tr>
+      <tr>
+        <td><strong>2. Applications</strong></td>
+        <td>X = -190<br>Process Color Badges</td>
+        <td>Running Windows processes sorted by active bandwidth. Shows process names (<code>chrome</code>, <code>Unity</code>, <code>msedge</code>, <code>svchost</code>), PID, and active sockets.</td>
+      </tr>
+      <tr>
+        <td><strong>3. Protocol Hubs</strong></td>
+        <td>X = 0<br>Sky Blue / Indigo</td>
+        <td>Consolidated transport protocol hubs: <code>TCP 443 (TLS)</code>, <code>UDP 443 (QUIC)</code>, <code>UDP 53 (DNS)</code>, <code>TCP 80 (HTTP)</code>, and <code>UDP 5353 (mDNS)</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>4. Destinations</strong></td>
+        <td>X = +190<br>GeoIP Badges & Flags</td>
+        <td>External servers contacted by your computer. Displays country flags, remote IP addresses, domain names, and destination port numbers.</td>
+      </tr>
+      <tr>
+        <td><strong>5. Service Groups</strong></td>
+        <td>X = +380<br>Purple Cluster Nodes</td>
+        <td>Infrastructure routing attribution: aggregates endpoints into known Autonomous Systems such as <em>Cloudflare</em>, <em>Microsoft Azure</em>, <em>Google Cloud</em>, <em>Amazon AWS</em>, and <em>RFC1918 Private</em>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Particle Flow Dynamics & Color Coding</h3>
+  <div class="grid-2">
+    <div class="card" style="border-left: 4px solid #ff8c00;">
+      <div class="card-title" style="color: #ff8c00;">AMBER PARTICLES — OUTGOING DATA (UPLINK)</div>
+      Particles moving from left to right represent upload traffic originating from your computer towards the remote server. Speed and density scale directly with measured outbound throughput.
+    </div>
+
+    <div class="card" style="border-left: 4px solid #00f3ff;">
+      <div class="card-title" style="color: #00f3ff;">CYAN PARTICLES — INCOMING DATA (DOWNLINK)</div>
+      Particles moving from right to left represent download traffic returning from external servers into your local applications. High particle velocities indicate active streaming or file downloads.
+    </div>
+  </div>
+
+  <h3>Canvas Interactive Controls</h3>
+  <ul>
+    <li><strong>Pan View:</strong> Left-click and drag anywhere on the canvas to pan across the highway.</li>
+    <li><strong>Zoom In / Out:</strong> Scroll the mouse wheel, or use the <code>[+]</code> and <code>[-]</code> buttons in the bottom-right corner.</li>
+    <li><strong>Reset View:</strong> Click the <code>RESET VIEW</code> button to restore the camera to the default centered perspective.</li>
+    <li><strong>Node Hover Tooltip:</strong> Hover over any node to reveal an instant HUD card detailing real-time speeds, transferred bytes, and PID.</li>
+    <li><strong>Path Highlighting:</strong> Click any node to highlight all incoming and outgoing Bezier paths connected to it in bright white.</li>
+  </ul>
+</div>
+
+<!-- ================= PAGE 4 ================= -->
+<div class="page">
+  <h2>6. THE 5 SPECIALIZED VISUALIZATION MODES</h2>
+  
+  <p>
+    Switch between the 5 visualization modes using the floating pill bar at the top of the CommandCenter:
+  </p>
+
+  <h3>Mode 1: Neural Flow (2.5D Data Highway)</h3>
+  <p>
+    The primary real-time WebGL data-flow universe described in Section 5. Best for continuous situational awareness and observing directional flow dynamics across all 5 architectural layers.
+  </p>
+
+  <h3>Mode 2: Application Map (Bipartite Process-to-Endpoint Matrix)</h3>
+  <p>
+    Presents a clean, two-column bipartite map linking running applications on the left directly to contacted endpoints on the right.
+  </p>
+  <ul>
+    <li><strong>Process Isolation:</strong> Clicking any application (e.g. <code>chrome.exe</code>) instantly filters the right-hand column to display <em>only</em> the remote servers contacted by that specific process.</li>
+    <li><strong>Quick Search:</strong> Includes a dedicated application search bar to locate specific processes instantly.</li>
+  </ul>
+
+  <h3>Mode 3: Live Data Stream (Traffic Burst Waterfall)</h3>
+  <p>
+    Visualizes raw packet bursts in real time as a continuous microsecond waterfall feed:
+  </p>
+  <ul>
+    <li><strong>Directional Badges:</strong> Green <code>RECV</code> vs Amber <code>SEND</code> indicators with packet lengths in bytes.</li>
+    <li><strong>Burst Gauges:</strong> Dynamic horizontal glowing bars representing relative frame volume.</li>
+    <li><strong>Direction Filters:</strong> Toggle between <code>ALL</code>, <code>INCOMING</code>, and <code>OUTGOING</code> traffic.</li>
+    <li><strong>Pause Stream:</strong> Freeze the live stream to inspect a high-frequency burst.</li>
+  </ul>
+
+  <h3>Mode 4: Destination Radar (Geographic & ASN Intelligence)</h3>
+  <p>
+    Groups your network activity by physical geography and Autonomous System routing:
+  </p>
+  <ul>
+    <li><strong>Observed Regions:</strong> Shows all active countries sorted by socket volume with national flags and byte tallies.</li>
+    <li><strong>Region Isolation:</strong> Click any country badge (e.g. 🇺🇸 United States) to view all active sockets connected to that specific territory.</li>
+  </ul>
+
+  <h3>Mode 5: Protocol Matrix (Application × Protocol Heatmap)</h3>
+  <p>
+    A high-density tabular heatmap cross-referencing running processes against network protocols:
+  </p>
+  <ul>
+    <li>Columns cover <code>TCP 443 (TLS)</code>, <code>UDP 443 (QUIC)</code>, <code>UDP 53 (DNS)</code>, <code>TCP 80 (HTTP)</code>, <code>UDP 5353 (mDNS)</code>, and <code>Other Sockets</code>.</li>
+    <li>Heat cells highlight volume in cyan, with socket counts and byte counters. Click any cell to inspect the underlying socket.</li>
+  </ul>
+
+  <div class="callout">
+    <div class="callout-title">TOP CONTROL PILL FILTERS</div>
+    The top bar also provides real-time protocol filters (<code>ALL</code>, <code>TCP</code>, <code>UDP</code>), traffic filters (<code>ALL</code>, <code>ACTIVE</code>, <code>PUBLIC</code>, <code>PRIVATE</code>, <code>SUSPICIOUS</code>), and an <code>Active Only</code> toggle to hide idle sockets.
+  </div>
+</div>
+
+<!-- ================= PAGE 5 ================= -->
+<div class="page">
+  <h2>7. DATA COMMUNICATION EXPLORER & PAYLOAD DISCLOSURE</h2>
+  
+  <p>
+    The <strong>Data Communication Explorer</strong> (accessible via the left sidebar) provides forensic timeline inspection of individual socket flows.
+  </p>
+
+  <h3>7.1 Chronological Frame Sequence (Mode A)</h3>
+  <p>
+    Select any active socket flow from the left-hand column to view its chronological request and response frames:
+  </p>
+  <pre>
+[18:54:22.000] OUTGOING REQUEST  (1500 Bytes)  192.168.1.112:49676 → 4.213.25.241:443  [ACK]
+[18:54:22.000] INCOMING RESPONSE ( 128 Bytes)  4.213.25.241:443 → 192.168.1.112:49676  [ACK, PSH]
+[18:54:22.792] OUTGOING REQUEST  (1500 Bytes)  192.168.1.112:49676 → 4.213.25.241:443  [ACK]
+[18:54:22.792] INCOMING RESPONSE ( 151 Bytes)  4.213.25.241:443 → 192.168.1.112:49676  [ACK, PSH]
+  </pre>
+
+  <h3>7.2 Cryptographic Transparency Notice</h3>
+  <div class="callout security">
+    <div class="callout-title">TRANSPORT ENCRYPTION (TLS 1.3 / QUIC) REALITY</div>
+    Modern HTTPS and QUIC traffic is encrypted end-to-end between the client and remote endpoint using Ephemeral Diffie-Hellman keys (ECDHE). NETSPECTRE adheres strictly to genuine technical accuracy: it truthfully captures packet sizes, arrival intervals, and endpoint addresses without deceptively claiming to read encrypted passwords or private tokens on the wire.
+  </div>
+
+  <h3>7.3 Mode B: Optional Browser Request Observability</h3>
+  <p>
+    For browser sessions (such as ChatGPT, Google, or YouTube), switch the top toggle to <strong>Mode B: Browser Observability</strong>.
+  </p>
+  <ul>
+    <li>Click <strong>ENABLE USER CONSENT</strong> to authorize request-level observability.</li>
+    <li>Displays higher-level HTTP request URLs (e.g. <code>POST https://chatgpt.com/backend-api/conversation</code>), HTTP status codes (<code>200 OK</code>), content types (<code>application/json</code>), and transfer sizes.</li>
+  </ul>
+
+  <h2>8. WIRESHARK INTEGRATION & PCAP EXPORT</h2>
+  
+  <p>
+    NETSPECTRE includes an integrated packet capture generator for deep forensic analysis:
+  </p>
+
+  <ol>
+    <li>Click the <strong>PCAP</strong> button in the top navigation bar.</li>
+    <li>NETSPECTRE exports a standard binary PCAP file (magic number <code>0xa1b2c3d4</code>) containing captured Ethernet and IP frames.</li>
+    <li>Double-click the exported <code>.pcap</code> file to open it directly in <strong>Wireshark</strong>.</li>
+  </ol>
+
+  <div class="callout">
+    <div class="callout-title">DEVELOPER TIP: TLS PAYLOAD DECRYPTION IN WIRESHARK</div>
+    If you wish to view decrypted HTTP payloads in Wireshark for your own browser sessions: set the Windows environment variable <code>SSLKEYLOGFILE=C:\sslkeys.log</code>, restart your browser, and point Wireshark's TLS preferences (<em>Edit → Preferences → Protocols → TLS → (Pre)-Master-Secret log filename</em>) to that file.
+  </div>
+</div>
+
+<!-- ================= PAGE 6 ================= -->
+<div class="page">
+  <h2>9. COMPLETE MODULE REFERENCE GUIDE</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Module</th>
+        <th style="width: 20%;">Sidebar Route</th>
+        <th style="width: 55%;">Primary Functionality & Use Case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Neural Universe</strong></td>
+        <td><code>Neural Universe</code></td>
+        <td>Interactive 2.5D visual command center with 5 columns and 5 visualization modes.</td>
+      </tr>
+      <tr>
+        <td><strong>Data Explorer</strong></td>
+        <td><code>Data Explorer</code></td>
+        <td>Microsecond frame sequence timeline, TLS transparency disclosures, and Mode B browser request telemetry.</td>
+      </tr>
+      <tr>
+        <td><strong>Applications</strong></td>
+        <td><code>Applications</code></td>
+        <td>Comprehensive per-application catalog showing total upload/download volume, active socket count, and contacted domains.</td>
+      </tr>
+      <tr>
+        <td><strong>Connections</strong></td>
+        <td><code>Connections</code></td>
+        <td>Detailed tabular matrix of every active socket: protocol, local address, local port, remote address, remote port, and TCP state.</td>
+      </tr>
+      <tr>
+        <td><strong>Packet Explorer</strong></td>
+        <td><code>Packet Explorer</code></td>
+        <td>Real-time packet stream breakdown with direction indicators, flags, and size distribution.</td>
+      </tr>
+      <tr>
+        <td><strong>Destinations</strong></td>
+        <td><code>Destinations</code></td>
+        <td>Global endpoint inventory with GeoIP mapping, ASN attribution, and country grouping.</td>
+      </tr>
+      <tr>
+        <td><strong>Time Travel</strong></td>
+        <td><code>Time Travel</code></td>
+        <td>Historical playback module. Scrubber timeline allows replaying past network bursts.</td>
+      </tr>
+      <tr>
+        <td><strong>Analytics</strong></td>
+        <td><code>Analytics</code></td>
+        <td>Time-series bandwidth graphs, protocol distribution donut charts, and transfer totals.</td>
+      </tr>
+      <tr>
+        <td><strong>Security & Threats</strong></td>
+        <td><code>Security & Threats</code></td>
+        <td>Automated threat detection engine flagging abnormal ports, unauthorized background listeners, and suspicious telemetry.</td>
+      </tr>
+      <tr>
+        <td><strong>Settings</strong></td>
+        <td><code>Settings</code></td>
+        <td>Configure engine IPC port (default 48123), visual rendering quality, and particle density.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>10. TROUBLESHOOTING & FREQUENTLY ASKED QUESTIONS</h2>
+
+  <h4>Q1: Why does PowerShell show a SecurityError regarding npm.ps1?</h4>
+  <p>
+    Windows PowerShell disables <code>.ps1</code> script execution by default. Always launch the application using <code>launch.bat</code> or call <code>npm.cmd</code> directly instead of <code>npm</code>.
+  </p>
+
+  <h4>Q2: Can NETSPECTRE decrypt HTTPS passwords or banking details?</h4>
+  <p>
+    No. In accordance with zero-trust security and technical honesty, NETSPECTRE never compromises cryptographic security. It monitors network dynamics, socket metadata, and packet timings without intercepting private credentials.
+  </p>
+
+  <h4>Q3: How do I change the engine port if 48123 is occupied?</h4>
+  <p>
+    Launch the engine with the custom port flag: <code>NetSpectreEngine.exe --port 50123</code>, and update the port in NETSPECTRE Settings or store configuration.
+  </p>
+
+  <div class="footer-note" style="margin-top: 10px;">
+    NETSPECTRE USER OPERATIONS MANUAL • END OF DOCUMENTATION • VERSION 2.4 WIN-NATIVE
+  </div>
+</div>
+
+</body>
+</html>

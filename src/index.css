@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #070a13;
+    color: #f1f5f9;
+  }
+
+  /* Custom Cyberpunk Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #060913;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00f3ff;
+  }
+}
+
+/* Sci-Fi Glow Utility Classes */
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 243, 255, 0.7);
+}
+
+.box-glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.25);
+}
+
+.box-glow-rose {
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.25);
+}
